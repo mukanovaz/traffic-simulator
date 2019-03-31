@@ -1,0 +1,1 @@
+javac -cp bin\app.jar;TrafficSim.jar src\application\*.java
