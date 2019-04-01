@@ -147,11 +147,10 @@ public class DrawPanel extends JPanel {
 	
 	private void drawCar(Point2D position, double orientation, int lenght, int width, Graphics2D g) {
 		position = model2window(position);
-		g.setStroke(new BasicStroke());
+		g.setStroke(new BasicStroke((float) stroke));
 		g.setColor(Color.BLACK);
 		
-		Ellipse2D car = new Ellipse2D.Double(position.getX(), position.getY(), stroke, stroke);
-//		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.5, lenght);
+		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.5, lenght);
 //		Rectangle2D car = new Rectangle2D.Double(0, 0, 0.5, lenght);
 
 		if (java.lang.Double.toString(orientation) != "NaN") 
@@ -170,7 +169,9 @@ public class DrawPanel extends JPanel {
 	}
 	
 	private void drawRoadSegment(RoadSegment road, Graphics2D g) {
-		drawLane(road.getStartPosition(), road.getEndPosition(), (int) road.getLaneWidth(), g);
+		
+		drawLane(road.getEndPointPosition(EndPoint.START), road.getEndPointPosition(EndPoint.END), (int) road.getLaneWidth(), g);
+//		drawLane(road.getStartPosition(), road.getEndPosition(), (int) road.getLaneWidth(), g);
 		roadList.add(new Road(1, road.getId(), road.getStartPosition(), road.getEndPosition()));
 		
 		double x1 = road.getStartPosition().getX();
@@ -231,7 +232,10 @@ public class DrawPanel extends JPanel {
 		// Draw Forward lanes 
 		for (int i = 0; i > -j; i--) {
 			
-			OFFSET = road.getLaneWidth();
+			if (i == 0)
+				OFFSET = road.getLaneWidth() + road.getLaneSeparatorWidth();
+			else 
+				OFFSET = road.getLaneWidth();
 			
 			double ux = x1 - x2; // smerovy vektor
 			double uy = y1 - y2; // smerovy vektor
