@@ -10,6 +10,7 @@ public class Main {
 		View theView = new View(sim);
         Controller theController = new Controller(theView, sim);
         String[] scenarios = sim.getScenarios();
+        
         for (String s : scenarios) {
 			theView.getScenar().addItem(s);
 		}

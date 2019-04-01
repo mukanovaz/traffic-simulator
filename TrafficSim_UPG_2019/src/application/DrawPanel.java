@@ -117,7 +117,8 @@ public class DrawPanel extends JPanel {
 			.orElse(null);	
 		
 		endRoad =  roadList.stream()
-				.filter(c -> c.getId().contains(e.getId()) && c.getNumber() == lane.getEndLaneNumber())
+				.filter(c -> c.getId().contains(e.getId()) 
+						&& c.getNumber() == lane.getEndLaneNumber())
 				.findAny() 
 				.orElse(null);	
 		
@@ -146,21 +147,16 @@ public class DrawPanel extends JPanel {
 	
 	private void drawCar(Point2D position, double orientation, int lenght, int width, Graphics2D g) {
 		position = model2window(position);
-//		g.setStroke(new BasicStroke((float)width));
+		g.setStroke(new BasicStroke());
 		g.setColor(Color.BLACK);
 		
-		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.5, lenght);
+		Ellipse2D car = new Ellipse2D.Double(position.getX(), position.getY(), stroke, stroke);
+//		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.5, lenght);
 //		Rectangle2D car = new Rectangle2D.Double(0, 0, 0.5, lenght);
-		
-		AffineTransform d = AffineTransform.getTranslateInstance(position.getX(), position.getY());
-//		g.translate(position.getX(), position.getY());
-		d.rotate(Math.toRadians(180));
 
 		if (java.lang.Double.toString(orientation) != "NaN") 
-//			g.drawLine((int)position.getX(), (int)position.getY(), (int)position.getX(), (int) position.getY() + lenght);
-		g.draw(car);
-		
-//		g.setTransform(defaultTrsnsform);
+			g.draw(car);
+		g.fill(car);
 	}
 	
 	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g) {
@@ -183,28 +179,29 @@ public class DrawPanel extends JPanel {
 		double y2 = road.getEndPosition().getY();
 		
 		if (road.getBackwardLanesCount() != 0 && road.getForwardLanesCount() != 0) {
-			drawBackwardLanes(x1, y1, x2, y2, road, g, road.getBackwardLanesCount());
+			drawForwardLanes(x1, y1, x2, y2, road, g, road.getForwardLanesCount());
 			x1 = road.getStartPosition().getX();
 			y1 = road.getStartPosition().getY();
 			x2 = road.getEndPosition().getX();
 			y2 = road.getEndPosition().getY();
-			drawForwardLanes(x1, y1, x2, y2, road, g, road.getForwardLanesCount());
+			drawBackwardLanes(x1, y1, x2, y2, road, g, road.getBackwardLanesCount());
 		} 
 		
+		if (road.getForwardLanesCount() == 0) {
+			drawBackwardLanes(x1, y1, x2, y2, road, g, road.getBackwardLanesCount());
+		}
+
 		if (road.getBackwardLanesCount() == 0) {
-			drawBackwardLanes(x1, y1, x2, y2, road, g, road.getForwardLanesCount());
+			drawForwardLanes(x1, y1, x2, y2, road, g, road.getForwardLanesCount());
 		}
 		
-		if (road.getForwardLanesCount() == 0) {
-			drawForwardLanes(x1, y1, x2, y2, road, g, road.getBackwardLanesCount());
-		}
 	}
 	
-	private void drawBackwardLanes(double x1, double y1, double x2, double y2, RoadSegment road, Graphics2D g, int j) {
+	private void drawForwardLanes(double x1, double y1, double x2, double y2, RoadSegment road, Graphics2D g, int j) {
 		// Draw Backward lanes 
 		for (int i = 1; i < j; i++) {
 			
-			OFFSET = 5;
+			OFFSET = road.getLaneWidth();
 			
 			double ux = x1 - x2; // smerovy vektor
 			double uy = y1 - y2; // smerovy vektor
@@ -230,11 +227,11 @@ public class DrawPanel extends JPanel {
 		}
 	}
 
-	private void drawForwardLanes(double x1, double y1, double x2, double y2, RoadSegment road, Graphics2D g, int j) {
+	private void drawBackwardLanes(double x1, double y1, double x2, double y2, RoadSegment road, Graphics2D g, int j) {
 		// Draw Forward lanes 
 		for (int i = 0; i > -j; i--) {
 			
-			OFFSET = 5;
+			OFFSET = road.getLaneWidth();
 			
 			double ux = x1 - x2; // smerovy vektor
 			double uy = y1 - y2; // smerovy vektor

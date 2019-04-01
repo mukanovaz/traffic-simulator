@@ -14,7 +14,7 @@ public class L01_SpusteniSimulatoru {
 		}
 		
 		// Nahrani a spusteni prvniho scenare
-		sim.runScenario(scenarios[2]);
+		sim.runScenario(scenarios[3]);
 
 		// Ziskani prvniho auta ze seznamu aut
 		Car car = sim.getCars()[0];
