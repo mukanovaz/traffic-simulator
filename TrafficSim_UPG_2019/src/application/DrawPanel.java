@@ -150,12 +150,17 @@ public class DrawPanel extends JPanel {
 		g.setStroke(new BasicStroke((float) stroke));
 		g.setColor(Color.BLACK);
 		
-		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.5, lenght);
-//		Rectangle2D car = new Rectangle2D.Double(0, 0, 0.5, lenght);
+		defaultTrsnsform = g.getTransform();
+		g.translate(position.getX(), position.getY());
+//		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.4, lenght);
+		Rectangle2D car = new Rectangle2D.Double(0, 0, 0.5, lenght);
+		System.out.println(orientation);
+		g.rotate(orientation, car.getX(), car.getY());
 
 		if (java.lang.Double.toString(orientation) != "NaN") 
 			g.draw(car);
 		g.fill(car);
+		g.setTransform(defaultTrsnsform);
 	}
 	
 	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g) {
@@ -171,7 +176,6 @@ public class DrawPanel extends JPanel {
 	private void drawRoadSegment(RoadSegment road, Graphics2D g) {
 		
 		drawLane(road.getEndPointPosition(EndPoint.START), road.getEndPointPosition(EndPoint.END), (int) road.getLaneWidth(), g);
-//		drawLane(road.getStartPosition(), road.getEndPosition(), (int) road.getLaneWidth(), g);
 		roadList.add(new Road(1, road.getId(), road.getStartPosition(), road.getEndPosition()));
 		
 		double x1 = road.getStartPosition().getX();
