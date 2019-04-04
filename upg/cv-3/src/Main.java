@@ -34,7 +34,7 @@ public class Main extends JPanel {
 		double x1 = (double)(dx1 - min_rx) / (max_rx - min_rx) * (max_ox - min_ox) + min_ox;
 		double x2 = (double)(dx2 - min_rx) / (max_rx - min_rx) * (max_ox - min_ox) + min_ox;
 
-		int min_ry = 20;
+		int min_ry = 60;
 		int max_ry = 60;
 		int min_oy = margin;
 		int max_oy = r - margin;
