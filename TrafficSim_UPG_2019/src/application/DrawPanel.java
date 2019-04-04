@@ -145,6 +145,7 @@ public class DrawPanel extends JPanel {
 		drawLane(start, end,(int) s.getLaneWidth(), g);
 	}
 	
+	int y = 0;
 	private void drawCar(Point2D position, double orientation, int lenght, int width, Graphics2D g) {
 		position = model2window(position);
 		g.setStroke(new BasicStroke((float) stroke));
@@ -152,11 +153,15 @@ public class DrawPanel extends JPanel {
 		
 		defaultTrsnsform = g.getTransform();
 		g.translate(position.getX(), position.getY());
-//		Rectangle2D car = new Rectangle2D.Double(position.getX(), position.getY(), 0.4, lenght);
-		Rectangle2D car = new Rectangle2D.Double(0, 0, 0.5, lenght);
-		System.out.println(orientation);
-		g.rotate(orientation, car.getX(), car.getY());
 
+		Rectangle2D car = new Rectangle2D.Double(0, 0, 0.5, lenght);
+//		System.out.println(orientation);
+		
+
+		if (orientation != 0.0) 
+			g.rotate(orientation);
+		else g.rotate(orientation + (Math.PI / 2));
+		
 		if (java.lang.Double.toString(orientation) != "NaN") 
 			g.draw(car);
 		g.fill(car);

@@ -23,12 +23,17 @@ public class Controller{
 	private JComboBox<String> cb;
 	private void innitListeners() {
 		int timerPeriod = 100;
+		
 	    long startTime = System.currentTimeMillis();
 		timer = new Timer(timerPeriod, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				view.setTime((System.currentTimeMillis() - startTime) / 100.0);
-				sim.nextStep(1);
+				view.setTime((System.currentTimeMillis() - startTime) / 1000.0);
+				try {
+					sim.nextStep(1);
+				} catch (Exception e2) {
+					System.out.println((System.currentTimeMillis() - startTime) / 1000.0);
+				}
 				view.getDrawPanel().repaint();
 			}
 		});

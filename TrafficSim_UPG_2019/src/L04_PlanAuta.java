@@ -19,7 +19,7 @@ public class L04_PlanAuta {
 
 		sim.runScenario(scenarios[0]);
 
-		Car car = sim.getCars()[0];
+		Car car = sim.getCars()[1];
 
 		// zjištění plánu auta
 		int p = 0;
