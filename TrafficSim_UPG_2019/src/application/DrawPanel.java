@@ -146,7 +146,7 @@ public class DrawPanel extends JPanel {
   
 	private void drawCrossRoad(Graphics2D g2d) {
 		
-		CrossRoad[] cross = sim.getCrossroads();	    
+		CrossRoad[] cross = sim.getCrossroads();	  
 		
 		for (CrossRoad crossRoad : cross) {
 			RoadSegment[] roads = crossRoad.getRoads();
@@ -159,7 +159,6 @@ public class DrawPanel extends JPanel {
 			// Connect roads into crossroad
 			Lane[] lanes = crossRoad.getLanes();
 			for (Lane lane : lanes) {
-//				System.out.println(lanes.length + " : " + lane.getSpeedAverage());
 				connectLanes(lane, g2d);
 			}
 		}	
@@ -228,17 +227,20 @@ public class DrawPanel extends JPanel {
 	}
 	
 	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g, Lane l) {
-
+//		Line2D shadow = new Line2D.Double(model2window(start), model2window(end));
+//		g.setColor(Color.WHITE);
+//		g.setStroke(new BasicStroke((float)stroke + 1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+//		g.draw(shadow);
+		
 		if(l.getSpeedAverage() < 10) g.setColor(new Color(128,193,255)); 
 		else if(10 < l.getSpeedAverage() && l.getSpeedAverage() < 50) g.setColor(new Color(115,174,230));
 		else if(50 < l.getSpeedAverage() && l.getSpeedAverage() < 60) g.setColor(new Color(96,145,191));
 		else if(60 < l.getSpeedAverage() && l.getSpeedAverage() < 80) g.setColor(new Color(64,97,128));
 		else g.setColor(new Color(79,101,128));
-		
 		Line2D lane = new Line2D.Double(model2window(start), model2window(end));
-		shapes.add(lane);
-		g.setStroke(new BasicStroke((float)stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));		
+		g.setStroke(new BasicStroke((float)stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
 		g.draw(lane);
+		shapes.add(lane);
 	}
 	
 	private void drawRoadSegment(RoadSegment road, Graphics2D g) {

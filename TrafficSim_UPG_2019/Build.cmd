@@ -1,1 +1,3 @@
-javac -cp bin\app.jar;TrafficSim.jar src\application\*.java
+cd /d src\application
+javac -d ..\..\bin\ *.java -cp .;..\..\TrafficSim.jar
+cd /d ..\..\
