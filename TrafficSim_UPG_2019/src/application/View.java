@@ -52,7 +52,7 @@ public class View extends JFrame{
 	private final JLabel timer_label = new JLabel("0.0");
 	private JComboBox<String> scenar = new JComboBox<String>();
 	private DrawPanel panel;
-	private JSlider slider = new JSlider(1, 10);	
+	private JSlider slider = new JSlider(0, 10);	
 
 	public View() {
 		panel = new DrawPanel();
@@ -75,13 +75,15 @@ public class View extends JFrame{
         this.getContentPane().setLayout(new BorderLayout(0, 0));
         
         Hashtable<Integer, Component> labelTable = new Hashtable<Integer, Component>();
+        labelTable.put(0, new JLabel("0"));
         labelTable.put(1, new JLabel("1"));
         labelTable.put(5, new JLabel("5"));
         labelTable.put(10, new JLabel("10"));
         slider.setLabelTable(labelTable);
         slider.setPaintTicks(true);
         slider.setPaintLabels(true);
-//        slider.setSnapToTicks(true);
+        slider.setMinorTickSpacing(1);
+        slider.setSnapToTicks(false);
         slider.setMajorTickSpacing(5);
         slider.setPaintTicks(true);
         slider.setBackground(SystemColor.inactiveCaption);
@@ -100,7 +102,7 @@ public class View extends JFrame{
         buttom_panel.setBackground(SystemColor.inactiveCaption);
         this.getContentPane().add(buttom_panel, BorderLayout.SOUTH);
         buttom_panel.add(btnStart);
-        buttom_panel.add(slider);
+        //buttom_panel.add(slider);
         buttom_panel.add(btnStop);
 //        buttom_panel.add(lblTime);
 //        buttom_panel.add(timer_label);

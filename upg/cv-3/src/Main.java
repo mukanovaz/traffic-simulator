@@ -25,11 +25,11 @@ public class Main extends JPanel {
 		int margin = 10;
 		int r = Math.min(width, height);
 		
-		int min_rx = 10;
+		int min_rx = 10; // road
 		int max_rx = 50;
 		int min_ox = margin;
 		int max_ox = r - margin;
-		int dx1 = 20;
+		int dx1 = 20; // Min()
 		int dx2 = 40;
 		double x1 = (double)(dx1 - min_rx) / (max_rx - min_rx) * (max_ox - min_ox) + min_ox;
 		double x2 = (double)(dx2 - min_rx) / (max_rx - min_rx) * (max_ox - min_ox) + min_ox;

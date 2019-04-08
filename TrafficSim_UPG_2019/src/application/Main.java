@@ -8,7 +8,7 @@ public class Main {
 		View theView = new View();
         Controller theController = new Controller(theView);
        
-        theView.getScenar().addItem("");
+//        theView.getScenar().addItem("");
         
         try {
 			theView.getScenar().setSelectedIndex(Integer.parseInt(args[0]));

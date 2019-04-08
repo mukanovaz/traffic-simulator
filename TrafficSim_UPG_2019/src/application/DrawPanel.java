@@ -209,33 +209,15 @@ public class DrawPanel extends JPanel {
 	private void drawCar(Point2D position, double orientation, int lenght, int width, double speed, Graphics2D g) {
 		position = model2window(position);
 		g.setStroke(new BasicStroke((float) stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		if (0 < speed && speed < 20) g.setColor(new Color(138,9,0)); 
-		else if (20 < speed && speed < 40) g.setColor(new Color(204,93,85)); 
-		else if (40 < speed && speed < 60) g.setColor(new Color(255,117,107)); 
-		else g.setColor(new Color(255,188,184)); 
-		
-//		switch (lenght) {
-//		case 4:
-//			g.setColor(new Color(255, 214, 112));
-//			break;
-//		case 5:
-//			g.setColor(new Color(232, 182, 102));
-//			break;
-//		case 6:
-//			g.setColor(new Color(232, 146, 102));
-//			break;
-//		case 7:
-//			g.setColor(new Color(255, 140, 112));
-//			break;
-//		default:
-//			g.setColor(Color.BLACK);
-//			break;
-//		}
+		if (0 < speed && speed < 20) g.setColor(new Color(242,238,215)); 
+		else if (20 < speed && speed < 40) g.setColor(new Color(242,234,184)); 
+		else if (40 < speed && speed < 60) g.setColor(new Color(243,231,156)); 
+		else g.setColor(new Color(233,215,140)); 
 		
 		defaultTrsnsform = g.getTransform();
 		g.translate(position.getX(), position.getY());
 
-		Line2D car = new Line2D.Double(0, 0, 0, lenght - 4);
+		Line2D car = new Line2D.Double(0, 0, 0, lenght-1);
 		shapes.add(car);
 		g.rotate(-(orientation + Math.PI / 2));
 		
@@ -247,13 +229,13 @@ public class DrawPanel extends JPanel {
 	
 	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g, Lane l) {
 
-		if(l.getSpeedAverage() < 10) g.setColor(new Color(43,57,64)); 
-		else if(10 < l.getSpeedAverage() && l.getSpeedAverage() < 50) g.setColor(new Color(85,155,128));
-		else if(50 < l.getSpeedAverage() && l.getSpeedAverage() < 60) g.setColor(new Color(128,172,191));
-		else if(60 < l.getSpeedAverage() && l.getSpeedAverage() < 80) g.setColor(new Color(153,207,230));
-		else g.setColor(new Color(171,230,255));
+		if(l.getSpeedAverage() < 10) g.setColor(new Color(128,193,255)); 
+		else if(10 < l.getSpeedAverage() && l.getSpeedAverage() < 50) g.setColor(new Color(115,174,230));
+		else if(50 < l.getSpeedAverage() && l.getSpeedAverage() < 60) g.setColor(new Color(96,145,191));
+		else if(60 < l.getSpeedAverage() && l.getSpeedAverage() < 80) g.setColor(new Color(64,97,128));
+		else g.setColor(new Color(79,101,128));
 		
-		Line2D lane = new Line2D.Double(model2window(start), model2window(end));	
+		Line2D lane = new Line2D.Double(model2window(start), model2window(end));
 		shapes.add(lane);
 		g.setStroke(new BasicStroke((float)stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));		
 		g.draw(lane);

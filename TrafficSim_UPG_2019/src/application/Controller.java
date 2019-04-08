@@ -15,17 +15,17 @@ public class Controller{
 	private View view;
 	private Timer timer;
 	private Simulator sim;
-	private int defaultPeriod = 100;
+	private int defaultPeriod = 50;
 	private Boolean state = false;
-	private int simulator_time = 1;
+	private double simulator_time = 0.09;
+	private JComboBox<String> cb;
 	
 	public Controller(View v) {
 		this.view = v;
-		innitListeners();
+		initListeners();
 	}
 
-	private JComboBox<String> cb;
-	private void innitListeners() {
+	private void initListeners() {
 		
 	    long startTime = System.currentTimeMillis();
 		timer = new Timer(defaultPeriod, new ActionListener() {
