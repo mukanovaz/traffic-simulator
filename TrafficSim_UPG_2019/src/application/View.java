@@ -8,6 +8,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 
 import java.awt.BorderLayout;
 import java.awt.Panel;
@@ -21,6 +22,7 @@ import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Date;
+import java.util.Hashtable;
 
 import javax.swing.JTextPane;
 import javax.swing.Timer;
@@ -50,11 +52,12 @@ public class View extends JFrame{
 	private final JLabel timer_label = new JLabel("0.0");
 	private JComboBox<String> scenar = new JComboBox<String>();
 	private DrawPanel panel;
-	
-	public View(Simulator sim) {
-		panel = new DrawPanel(sim);
+	private JSlider slider = new JSlider(1, 10);	
+
+	public View() {
+		panel = new DrawPanel();
 		this.setTitle("Crossroad - Mukanova Zhanel");
-//		this.setSize(new Dimension(640, 480));
+		this.setSize(new Dimension(640, 480));
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH); 
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);    
@@ -71,12 +74,23 @@ public class View extends JFrame{
         
         this.getContentPane().setLayout(new BorderLayout(0, 0));
         
+        Hashtable<Integer, Component> labelTable = new Hashtable<Integer, Component>();
+        labelTable.put(1, new JLabel("1"));
+        labelTable.put(5, new JLabel("5"));
+        labelTable.put(10, new JLabel("10"));
+        slider.setLabelTable(labelTable);
+        slider.setPaintTicks(true);
+        slider.setPaintLabels(true);
+//        slider.setSnapToTicks(true);
+        slider.setMajorTickSpacing(5);
+        slider.setPaintTicks(true);
+        slider.setBackground(SystemColor.inactiveCaption);
+        slider.setValue(1);
+        
         // Top panel
         top_panel.setBackground(SystemColor.inactiveCaption);
         this.getContentPane().add(top_panel, BorderLayout.NORTH);
         top_panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-        top_panel.add(btnStart);
-        top_panel.add(btnStop);
         top_panel.add(scenar);
         
         // Drawing panel
@@ -85,10 +99,29 @@ public class View extends JFrame{
         // Button panel
         buttom_panel.setBackground(SystemColor.inactiveCaption);
         this.getContentPane().add(buttom_panel, BorderLayout.SOUTH);
-        buttom_panel.add(lblTime);
-        buttom_panel.add(timer_label);
+        buttom_panel.add(btnStart);
+        buttom_panel.add(slider);
+        buttom_panel.add(btnStop);
+//        buttom_panel.add(lblTime);
+//        buttom_panel.add(timer_label);
+        
+        Simulator sim = new Simulator();
+        String[] scenarios = sim.getScenarios();
+        
+        for (String s : scenarios) {
+			getScenar().addItem(s);
+		}
+        sim = null;
     }
 	
+	public JSlider getSlider() {
+		return slider;
+	}
+
+	public void setSlider(JSlider slider) {
+		this.slider = slider;
+	}
+
 	public JComboBox<String> getScenar() {
 		return scenar;
 	}
