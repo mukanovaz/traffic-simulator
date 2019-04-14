@@ -40,7 +40,7 @@ import TrafficSim.Lane;
 
 public class DrawPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
-	private final int MARGIN = 0;
+	private final int MARGIN = 30;
 	// Max a Min of crossroad in meters
 	private double Xmax_X_in_m = 0;
 	private double Xmax_Y_in_m = 0;
@@ -54,8 +54,6 @@ public class DrawPanel extends JPanel {
 	// Simulator instance
 	private Simulator sim;
 
-	// Relative road width
-	private double stroke;
 	// List of generated lanes
 	private List<Road> roadList;
 	// Offset between lanes
@@ -78,14 +76,13 @@ public class DrawPanel extends JPanel {
 		roadList = new ArrayList<Road>();
 		
 		Graphics2D g2 = (Graphics2D)g; 
-		
-		computeModel2WindowTransformation(getWidth(), getHeight());
-		
 		// Set background color
 		g2.setColor(new Color(230, 255, 204));
 		g2.fillRect(0, 0, this.getWidth(), this.getHeight());
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.translate(MARGIN, MARGIN);
 		
+		computeModel2WindowTransformation(getWidth(), getHeight());
 		drawTrafficState(sim, g2);	
 	}
   
@@ -102,7 +99,7 @@ public class DrawPanel extends JPanel {
 		}
 		
 		for (CrossRoad crossRoad : cross) {
-			RoadSegment[] roads = cross[1].getRoads();
+			RoadSegment[] roads = crossRoad.getRoads();
 			
 			// Draw road segments
 			for (RoadSegment roadSegment : roads) {
@@ -110,7 +107,7 @@ public class DrawPanel extends JPanel {
 			}
 			
 			// Connect roads into crossroad
-			Lane[] lanes = cross[1].getLanes();
+			Lane[] lanes = crossRoad.getLanes();
 			for (Lane lane : lanes) {
 				connectLanes(lane, g2d);
 			}
@@ -215,6 +212,8 @@ public class DrawPanel extends JPanel {
 		}
 		
 		Line2D lane = new Line2D.Double(model2window(start), model2window(end));
+		System.out.println("S " + model2window(start));
+		System.out.println("E " + model2window(end));
 		g.setStroke(new BasicStroke((float)size * (float) scale, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
 		g.draw(lane);
 		shapes.add(lane);
@@ -321,7 +320,7 @@ public class DrawPanel extends JPanel {
 		
 		double[] x_array = new double[roads.length * 2];
 		double[] y_array = new double[roads.length * 2];
-		
+	
 		for (int i = 0; i < roads.length; i++) {
 			x_array[i] = roads[i].getStartPosition().getX();
 			y_array[i] = roads[i].getStartPosition().getY();
@@ -339,9 +338,6 @@ public class DrawPanel extends JPanel {
 		Arrays.sort(y_array);
 		Xmax_Y_in_m = y_array[x_array.length - 1];
 		Xmin_Y_in_m = y_array[0];
-		
-		System.out.println("Max x" + Xmax_X_in_m + " Min x" + Xmin_X_in_m);
-		System.out.println("Max y" + Xmax_Y_in_m + " Min y" + Xmin_Y_in_m);
 	}
 	
 	private void computeModel2WindowTransformation(int width, int height) {

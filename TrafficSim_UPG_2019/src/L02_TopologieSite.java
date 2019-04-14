@@ -20,7 +20,7 @@ public class L02_TopologieSite {
 			System.out.println(scenarios[i]);
 		}
 
-		sim.runScenario(scenarios[1]);
+		sim.runScenario(scenarios[0]);
 		
 		// Silnice
 		// =======
