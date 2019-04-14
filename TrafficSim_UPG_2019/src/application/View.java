@@ -25,7 +25,10 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import javax.swing.JTextPane;
+import javax.swing.JToggleButton;
+import javax.swing.SpringLayout;
 import javax.swing.Timer;
+import javax.swing.border.TitledBorder;
 
 import TrafficSim.Simulator;
 
@@ -33,6 +36,8 @@ import javax.swing.JTable;
 import java.awt.FlowLayout;
 import java.awt.Component;
 import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 
 public class View extends JFrame{
 
@@ -45,15 +50,23 @@ public class View extends JFrame{
 	private JMenuItem itemExit = new JMenuItem("Exit");
 	private JMenuItem itemAbout = new JMenuItem("About");
 	private final Panel top_panel = new Panel();
+	private final Panel right_panel = new Panel();
+	private final Panel buttom_panel = new Panel();
 	private final JButton btnStart = new JButton("Start");
 	private final JButton btnStop = new JButton("Stop");
-	private final Panel buttom_panel = new Panel();
 	private final JLabel lblTime = new JLabel("Time:");
 	private final JLabel timer_label = new JLabel("0.0");
 	private JComboBox<String> scenar = new JComboBox<String>();
 	private DrawPanel panel;
 	private JSlider slider = new JSlider(0, 10);	
-
+	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
+	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
+	private ButtonGroup roads_colors_group = new ButtonGroup();
+	private JButton zoomP = new JButton("+");
+	private JButton zoomM = new JButton("-");
+	private JButton b1 = new JButton("+");
+	private JButton b2 = new JButton("-");
+	
 	public View() {
 		panel = new DrawPanel();
 		this.setTitle("Crossroad - Mukanova Zhanel");
@@ -75,10 +88,10 @@ public class View extends JFrame{
         this.getContentPane().setLayout(new BorderLayout(0, 0));
         
         Hashtable<Integer, Component> labelTable = new Hashtable<Integer, Component>();
-        labelTable.put(0, new JLabel("0"));
-        labelTable.put(1, new JLabel("1"));
-        labelTable.put(5, new JLabel("5"));
-        labelTable.put(10, new JLabel("10"));
+        labelTable.put(1, new JLabel("0.1"));
+        labelTable.put(5, new JLabel("0.5"));
+        labelTable.put(10, new JLabel("1"));
+        
         slider.setLabelTable(labelTable);
         slider.setPaintTicks(true);
         slider.setPaintLabels(true);
@@ -87,7 +100,7 @@ public class View extends JFrame{
         slider.setMajorTickSpacing(5);
         slider.setPaintTicks(true);
         slider.setBackground(SystemColor.inactiveCaption);
-        slider.setValue(1);
+        slider.setValue(5);
         
         // Top panel
         top_panel.setBackground(SystemColor.inactiveCaption);
@@ -102,10 +115,23 @@ public class View extends JFrame{
         buttom_panel.setBackground(SystemColor.inactiveCaption);
         this.getContentPane().add(buttom_panel, BorderLayout.SOUTH);
         buttom_panel.add(btnStart);
-        //buttom_panel.add(slider);
+        buttom_panel.add(slider);
         buttom_panel.add(btnStop);
-//        buttom_panel.add(lblTime);
-//        buttom_panel.add(timer_label);
+        
+        // Right panel
+        this.getContentPane().add(right_panel, BorderLayout.EAST);
+        right_panel.setLayout(new BoxLayout(right_panel, BoxLayout.Y_AXIS));
+        
+        roads_color_btn1.setMaximumSize(new Dimension(145,25));
+        roads_color_btn2.setMaximumSize(new Dimension(145,25));
+        roads_colors_group.add(roads_color_btn1);
+        roads_colors_group.add(roads_color_btn2);
+       
+        right_panel.add(addColorsPanel());
+        right_panel.add(addZoomPanel());
+        right_panel.add(addOtherPanel());
+        
+        roads_color_btn1.setSelected(true);
         
         Simulator sim = new Simulator();
         String[] scenarios = sim.getScenarios();
@@ -116,6 +142,40 @@ public class View extends JFrame{
         sim = null;
     }
 	
+	private Component addOtherPanel() {
+		JPanel p1 = new JPanel();
+		p1.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		p1.setLayout(new BoxLayout(p1, BoxLayout.LINE_AXIS));
+		p1.setBorder(new TitledBorder("Colors"));
+		p1.add(b1);
+		p1.add(Box.createRigidArea(new Dimension(5,5)));
+		p1.add(b2);
+		return p1;
+	}
+
+	private Component addZoomPanel() {
+		JPanel p2 = new JPanel();
+		p2.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        p2.setLayout(new BoxLayout(p2, BoxLayout.LINE_AXIS));
+        p2.setBorder(new TitledBorder("Zoom"));
+        p2.add(zoomP);
+        p2.add(Box.createRigidArea(new Dimension(5,5)));
+        p2.add(zoomM);
+		return p2;
+	}
+
+	private Component addColorsPanel() {
+		JPanel p1 = new JPanel();
+		p1.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		p1.setLayout(new BoxLayout(p1, BoxLayout.PAGE_AXIS));
+		p1.setBorder(new TitledBorder("Colors"));
+		p1.add(roads_color_btn1);
+		p1.add(Box.createRigidArea(new Dimension(5,5)));
+		p1.add(roads_color_btn2);
+		p1.add(Box.createRigidArea(new Dimension(5,5)));
+		return p1;
+	}
+
 	public JSlider getSlider() {
 		return slider;
 	}
@@ -147,4 +207,21 @@ public class View extends JFrame{
 	public DrawPanel getDrawPanel () {
 		return panel;
 	}
+
+	public JToggleButton getRoads_color_btn1() {
+		return roads_color_btn1;
+	}
+
+	public void setRoads_color_btn1(JToggleButton roads_color_btn1) {
+		this.roads_color_btn1 = roads_color_btn1;
+	}
+
+	public JToggleButton getRoads_color_btn2() {
+		return roads_color_btn2;
+	}
+
+	public void setRoads_color_btn2(JToggleButton roads_color_btn2) {
+		this.roads_color_btn2 = roads_color_btn2;
+	}
+	
 }

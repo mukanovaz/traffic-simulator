@@ -15,9 +15,9 @@ public class Controller{
 	private View view;
 	private Timer timer;
 	private Simulator sim;
-	private int defaultPeriod = 50;
+	private int defaultPeriod = 100;
 	private Boolean state = false;
-	private double simulator_time = 0.09;
+	private double simulator_time = 0.5;
 	private JComboBox<String> cb;
 	
 	public Controller(View v) {
@@ -32,7 +32,8 @@ public class Controller{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				view.setTime((System.currentTimeMillis() - startTime) / 1000.0);
-				sim.nextStep(simulator_time);
+				double d = defaultPeriod/100;
+				sim.nextStep(d);
 				view.getDrawPanel().repaint();
 			}
 		});
@@ -55,19 +56,21 @@ public class Controller{
 				setSimulator(sim);
 				sim.runScenario(sim.getScenarios()[cb.getSelectedIndex()]);
 				view.getDrawPanel().setSim(sim);
+				view.getDrawPanel().computeModelDimensions();
 				view.getDrawPanel().repaint();
 			}
 		});
 		
 		this.view.getSlider().addChangeListener(e -> setTimerPeriod(e));
-		
+		this.view.getRoads_color_btn1().addChangeListener(e -> view.getDrawPanel().setRoadColor(true));
+		this.view.getRoads_color_btn2().addChangeListener(e -> view.getDrawPanel().setRoadColor(false));
 	}
 	
 	private void setTimerPeriod(ChangeEvent e) {
 	     timer.stop();
 		 JSlider source = (JSlider)e.getSource();
 		 int newPeriod = source.getValue();
-	     simulator_time = newPeriod;
+	     simulator_time = (double) newPeriod / 10;
 	     if (state) timer.restart();
 	}
 

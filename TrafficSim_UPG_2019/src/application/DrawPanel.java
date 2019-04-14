@@ -25,11 +25,17 @@ import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import com.sun.org.apache.xml.internal.security.Init;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import TrafficSim.Car;
 import TrafficSim.CrossRoad;
+import TrafficSim.Direction;
 import TrafficSim.EndPoint;
 import TrafficSim.RoadSegment;
 import TrafficSim.Simulator;
+import TrafficSim.TrafficLight;
+import TrafficSim.TrafficLightState;
 import TrafficSim.Lane;
 
 public class DrawPanel extends JPanel {
@@ -53,77 +59,26 @@ public class DrawPanel extends JPanel {
 	// List of generated lanes
 	private List<Road> roadList;
 	// Offset between lanes
-//	private final int OFFSET = 5;
 	private double OFFSET;
 	private final int ZOOM = 0;
 	AffineTransform defaultTrsnsform;
 	private List<Shape> shapes;
-  
+	private double scale;
+	  
 	public DrawPanel() {
-		this.addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				g2.translate(0, getHeight());
-				 for (int i = 0; i < shapes.size(); i++) {
-			            Shape shape = shapes.get(i);
-			            
-			            Point2D p = (new Point2D.Double(e.getX()  - stroke / 2.0, 
-			            										  - e.getY()  - stroke / 2.0));
-			            
-			            Rectangle2D range = new Rectangle2D.Double(p.getX(), p.getY(), stroke, stroke);
-			            
-			            if (shape.intersects(range)) {
-			                System.out.println("Clicked shape " + i);
-			            }
-			        }
-			}
-		});
+		
 	}
 	
-	private Graphics2D g2;
-  
 	@Override
 	protected void paintComponent(Graphics g) {
-		Xmax_X_in_m = 0;
-		Xmax_Y_in_m = 0;
-		Xmin_X_in_m = 0;
-		Xmin_Y_in_m = 0;
+		super.paintComponent(g);
 		shapes = new ArrayList<Shape>();
 		
 		// Initialize roads List and road Width
 		roadList = new ArrayList<Road>();
-		stroke = Math.min(getWidth(), getHeight()) * 0.012;
 		
-		super.paintComponent(g);
-		g2 = (Graphics2D)g; 
-		defaultTrsnsform = g2.getTransform();
+		Graphics2D g2 = (Graphics2D)g; 
 		
-		computeModelDimensions();
 		computeModel2WindowTransformation(getWidth(), getHeight());
 		
 		// Set background color
@@ -131,25 +86,23 @@ public class DrawPanel extends JPanel {
 		g2.fillRect(0, 0, this.getWidth(), this.getHeight());
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		
-//        double newX = 100  - stroke / 2.0;
-//        double newY = 100  - stroke / 2.0;
-//        Line2D range = new Line2D.Double(newX, newY, stroke, stroke);
-//		g2.setColor(Color.CYAN);
-//		g2.setStroke(new BasicStroke((float)stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));		
-//        g2.draw(range);
-//        shapes.add(range);
-        
-		g2.translate(0, getHeight());
-		drawTrafficState(sim, g2);
-		g2.setTransform(defaultTrsnsform);
+		drawTrafficState(sim, g2);	
 	}
   
 	private void drawCrossRoad(Graphics2D g2d) {
 		
 		CrossRoad[] cross = sim.getCrossroads();	  
 		
+		if (cross.length == 0) {
+			RoadSegment[] roads = sim.getRoadSegments();
+			for (RoadSegment roadSegment : roads) {
+				if (roadSegment != null) drawRoadSegment(roadSegment, g2d);
+			}
+			return;
+		}
+		
 		for (CrossRoad crossRoad : cross) {
-			RoadSegment[] roads = crossRoad.getRoads();
+			RoadSegment[] roads = cross[1].getRoads();
 			
 			// Draw road segments
 			for (RoadSegment roadSegment : roads) {
@@ -157,12 +110,14 @@ public class DrawPanel extends JPanel {
 			}
 			
 			// Connect roads into crossroad
-			Lane[] lanes = crossRoad.getLanes();
+			Lane[] lanes = cross[1].getLanes();
 			for (Lane lane : lanes) {
 				connectLanes(lane, g2d);
 			}
 		}	
 	}
+	
+
 
 	private void connectLanes(Lane lane, Graphics2D g) {
 		RoadSegment s = lane.getStartRoad();
@@ -207,11 +162,25 @@ public class DrawPanel extends JPanel {
 	
 	private void drawCar(Point2D position, double orientation, int lenght, int width, double speed, Graphics2D g) {
 		position = model2window(position);
-		g.setStroke(new BasicStroke((float) stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		if (0 < speed && speed < 20) g.setColor(new Color(242,238,215)); 
-		else if (20 < speed && speed < 40) g.setColor(new Color(242,234,184)); 
-		else if (40 < speed && speed < 60) g.setColor(new Color(243,231,156)); 
-		else g.setColor(new Color(233,215,140)); 
+		g.setStroke(new BasicStroke((float) width * (float) scale / 2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		
+		switch (lenght) {
+		case 4:
+			g.setColor(new Color(242,238,215));
+			break;
+		case 5:
+			g.setColor(new Color(242,234,184));
+			break;
+		case 6:
+			g.setColor(new Color(243,231,156));
+			break;
+		case 7:
+			g.setColor(new Color(233,215,140));
+			break;
+		default:
+			g.setColor(Color.BLACK);
+			break;
+		}
 		
 		defaultTrsnsform = g.getTransform();
 		g.translate(position.getX(), position.getY());
@@ -226,19 +195,27 @@ public class DrawPanel extends JPanel {
 		g.setTransform(defaultTrsnsform);
 	}
 	
+	private Boolean roadColor = true;
 	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g, Lane l) {
-//		Line2D shadow = new Line2D.Double(model2window(start), model2window(end));
-//		g.setColor(Color.WHITE);
-//		g.setStroke(new BasicStroke((float)stroke + 1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
-//		g.draw(shadow);
+		double value;
+		if (roadColor) {
+			value = l.getSpeedAverage();
+			if(value < 10) g.setColor(new Color(128,193,255)); 
+			else if(10 <= value && value < 50) g.setColor(new Color(115,174,230));
+			else if(50 <= value && value < 60) g.setColor(new Color(96,145,191));
+			else if(60 <= value && value < 80) g.setColor(new Color(64,97,128));
+			else g.setColor(new Color(79,101,128));			
+		} else {
+			value = l.getNumberOfCarsCurrent();
+			if(value < 1) g.setColor(new Color(128,193,255)); 
+			else if(1 <= value && value < 2) g.setColor(new Color(115,174,230));
+			else if(2 <= value && value < 3) g.setColor(new Color(96,145,191));
+			else if(3 <= value && value < 4) g.setColor(new Color(64,97,128));
+			else g.setColor(new Color(79,101,128));		
+		}
 		
-		if(l.getSpeedAverage() < 10) g.setColor(new Color(128,193,255)); 
-		else if(10 < l.getSpeedAverage() && l.getSpeedAverage() < 50) g.setColor(new Color(115,174,230));
-		else if(50 < l.getSpeedAverage() && l.getSpeedAverage() < 60) g.setColor(new Color(96,145,191));
-		else if(60 < l.getSpeedAverage() && l.getSpeedAverage() < 80) g.setColor(new Color(64,97,128));
-		else g.setColor(new Color(79,101,128));
 		Line2D lane = new Line2D.Double(model2window(start), model2window(end));
-		g.setStroke(new BasicStroke((float)stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+		g.setStroke(new BasicStroke((float)size * (float) scale, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
 		g.draw(lane);
 		shapes.add(lane);
 	}
@@ -268,7 +245,6 @@ public class DrawPanel extends JPanel {
 		if (road.getBackwardLanesCount() == 0) {
 			drawForwardLanes(x1, y1, x2, y2, road, g, road.getForwardLanesCount());
 		}
-		
 	}
 	
 	private void drawForwardLanes(double x1, double y1, double x2, double y2, RoadSegment road, Graphics2D g, int j) {
@@ -290,9 +266,9 @@ public class DrawPanel extends JPanel {
 			
 			Point2D x = new Point2D.Double(x1p, y1p);
 			Point2D y = new Point2D.Double(x2p, y2p);
-			drawLane(x, y, (int) road.getLaneWidth() + ZOOM, g, road.getLane(i));
 			
 			roadList.add(new Road(i + 1, road.getId(), x, y));
+			drawLane(x, y, (int) road.getLaneWidth() + ZOOM, g, road.getLane(i));
 			
 			x1 = x1p;
 			x2 = x2p;
@@ -306,7 +282,7 @@ public class DrawPanel extends JPanel {
 		for (int i = 0; i > -j; i--) {
 			
 			if (i == 0)
-				OFFSET = road.getLaneWidth() + road.getLaneSeparatorWidth();
+				OFFSET = (road.getLaneWidth() + road.getLaneSeparatorWidth());
 			else 
 				OFFSET = road.getLaneWidth();
 			
@@ -323,8 +299,8 @@ public class DrawPanel extends JPanel {
 			
 			Point2D x = new Point2D.Double(x1p, y1p);
 			Point2D y = new Point2D.Double(x2p, y2p);
-			drawLane(x, y, (int) road.getLaneWidth() + ZOOM, g, road.getLane(i - 1));
 			
+			drawLane(x, y, (int) road.getLaneWidth() + ZOOM, g, road.getLane(i - 1));
 			roadList.add(new Road(i-1, road.getId(), x, y));
 			
 			x1 = x1p;
@@ -335,7 +311,12 @@ public class DrawPanel extends JPanel {
 		
 	}
 
-	private void computeModelDimensions() {
+	public void computeModelDimensions() {
+		Xmax_X_in_m = 0;
+		Xmax_Y_in_m = 0;
+		Xmin_X_in_m = 0;
+		Xmin_Y_in_m = 0;
+		
 		RoadSegment[] roads = sim.getRoadSegments();
 		
 		double[] x_array = new double[roads.length * 2];
@@ -358,6 +339,9 @@ public class DrawPanel extends JPanel {
 		Arrays.sort(y_array);
 		Xmax_Y_in_m = y_array[x_array.length - 1];
 		Xmin_Y_in_m = y_array[0];
+		
+		System.out.println("Max x" + Xmax_X_in_m + " Min x" + Xmin_X_in_m);
+		System.out.println("Max y" + Xmax_Y_in_m + " Min y" + Xmin_Y_in_m);
 	}
 	
 	private void computeModel2WindowTransformation(int width, int height) {
@@ -372,11 +356,14 @@ public class DrawPanel extends JPanel {
 	private Point2D model2window(Point2D p) {
 		double x = 0;
 		double y = 0;
-		double scale = (max_X_px - min_X_px)  / (Xmax_X_in_m - Xmin_X_in_m);
 		
-		x = (p.getX() - min_X_px) * scale;	
-		y = (double) - ((p.getY() - Xmin_Y_in_m) / (Xmax_Y_in_m - Xmin_Y_in_m) * (max_Y_px - min_Y_px) + min_Y_px);			
+		double sx = (max_X_px - min_X_px)  / (Xmax_X_in_m - Xmin_X_in_m);
+		double sy = (max_Y_px - min_Y_px)  / (Xmax_Y_in_m - Xmin_Y_in_m);
+		scale = Math.min(sx,  sy);
 		
+		x = (p.getX() - Xmin_X_in_m) * scale;
+		y = (max_Y_px - min_Y_px) - (p.getY() - Xmin_Y_in_m) * scale;
+				
 		return new Point2D.Double(x, y);
 	}
 	
@@ -390,6 +377,28 @@ public class DrawPanel extends JPanel {
 		}
 	}
 
+	private void drawTrafficLight (Point2D start, Graphics2D g) {
+		g.setColor(Color.DARK_GRAY);
+		Point2D newPoint = model2window(start);
+		Line2D lane = new Line2D.Double(newPoint, (new Point2D.Double(newPoint.getX(), newPoint.getY() - 25)));
+		Line2D lane2 = new Line2D.Double(newPoint, (new Point2D.Double(newPoint.getX(), newPoint.getY() + 15)));
+		g.setStroke(new BasicStroke((float)4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+		g.draw(lane2);
+		g.setStroke(new BasicStroke((float)15, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+		g.draw(lane);
+		drawCircle(newPoint, 5, 2, Color.gray, g);
+		drawCircle(newPoint, 5, 13, Color.gray, g);
+		drawCircle(newPoint, 5, 23, Color.gray, g);
+	}
+	
+	private void drawCircle(Point2D center, int radius, double offset, Color c, Graphics2D g) {
+		int diameter = radius * 2;
+		Ellipse2D light = new Ellipse2D.Double(center.getX() - radius, center.getY() - offset - radius, diameter, diameter);
+		g.setStroke(new BasicStroke());	
+		g.setColor(c);
+		g.fill(light);
+	}
+	
 	public Simulator getSim() {
 		return sim;
 	}
@@ -398,6 +407,9 @@ public class DrawPanel extends JPanel {
 		this.sim = sim;
 	}
 
-	
+	public void setRoadColor(Boolean roadColor) {
+		this.roadColor = roadColor;
+	}
+
 	
 }
