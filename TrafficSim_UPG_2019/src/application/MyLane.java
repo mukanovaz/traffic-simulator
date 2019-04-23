@@ -33,5 +33,8 @@ public class MyLane {
 		return line;
 	}
 	
-	
+	@Override
+	public String toString() {
+		return line.toString();
+	}
 }

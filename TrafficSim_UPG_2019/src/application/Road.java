@@ -2,6 +2,8 @@ package application;
 
 import java.awt.geom.Point2D;
 
+import TrafficSim.Lane;
+
 public class Road {
 
 	private int number;
@@ -9,12 +11,11 @@ public class Road {
 	private Point2D startPos;
 	private Point2D endPos;
 	
-	public Road(int number, String id, Point2D x, Point2D y) {
-		super();
+	public Road(int number, String id, Point2D startPos, Point2D endPos) {
 		this.number = number;
 		this.id = id;
-		this.startPos = x;
-		this.endPos = y;
+		this.startPos = startPos;
+		this.endPos = endPos;
 	}
 
 	public Point2D getStartPos() {
@@ -49,7 +50,7 @@ public class Road {
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
 	@Override
 	public String toString() {
 		return id;

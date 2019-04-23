@@ -58,7 +58,7 @@ public class View extends JFrame{
 	private final JLabel timer_label = new JLabel("0.0");
 	private JComboBox<String> scenar = new JComboBox<String>();
 	private DrawPanel panel;
-	private JSlider slider = new JSlider(0, 10);	
+	private JSlider slider = new JSlider(0, 100);	
 	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
 	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
 	private ButtonGroup roads_colors_group = new ButtonGroup();
@@ -88,9 +88,9 @@ public class View extends JFrame{
         this.getContentPane().setLayout(new BorderLayout(0, 0));
         
         Hashtable<Integer, Component> labelTable = new Hashtable<Integer, Component>();
-        labelTable.put(1, new JLabel("0.1"));
-        labelTable.put(5, new JLabel("0.5"));
-        labelTable.put(10, new JLabel("1"));
+        labelTable.put(0, new JLabel("0"));
+        labelTable.put(50, new JLabel("50"));
+        labelTable.put(100, new JLabel("100"));
         
         slider.setLabelTable(labelTable);
         slider.setPaintTicks(true);
@@ -100,7 +100,7 @@ public class View extends JFrame{
         slider.setMajorTickSpacing(5);
         slider.setPaintTicks(true);
         slider.setBackground(SystemColor.inactiveCaption);
-        slider.setValue(5);
+        slider.setValue(100);
         
         // Top panel
         top_panel.setBackground(SystemColor.inactiveCaption);
@@ -223,5 +223,14 @@ public class View extends JFrame{
 	public void setRoads_color_btn2(JToggleButton roads_color_btn2) {
 		this.roads_color_btn2 = roads_color_btn2;
 	}
+
+	public JButton getZoomP() {
+		return zoomP;
+	}
+
+	public JButton getZoomM() {
+		return zoomM;
+	}
+	
 	
 }

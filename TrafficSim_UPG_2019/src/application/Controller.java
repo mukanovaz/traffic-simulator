@@ -15,9 +15,8 @@ public class Controller{
 	private View view;
 	private Timer timer;
 	private Simulator sim;
-	private int defaultPeriod = 100;
+	private int defaultPeriod = 50;
 	private Boolean state = false;
-	private double simulator_time = 0.5;
 	private JComboBox<String> cb;
 	
 	public Controller(View v) {
@@ -27,20 +26,19 @@ public class Controller{
 
 	private void initListeners() {
 		
-	    long startTime = System.currentTimeMillis();
 		timer = new Timer(defaultPeriod, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				view.setTime((System.currentTimeMillis() - startTime) / 1000.0);
-				double d = defaultPeriod/100;
-				sim.nextStep(d);
+				double stepValue = (double) defaultPeriod / 1000;
+				sim.nextStep(stepValue);
+				view.getDrawPanel().setSimulation_time(defaultPeriod);
 				view.getDrawPanel().repaint();
 			}
 		});
 		
 		cb = this.view.getScenar();
 		this.view.getItemExitButton().addActionListener(e -> System.exit(1));
-		this.view.getStartButton().addActionListener(e ->  { 
+		this.view.getStartButton().addActionListener(e ->  {
 				state = true;
 				timer.start(); 
 			});
@@ -64,13 +62,20 @@ public class Controller{
 		this.view.getSlider().addChangeListener(e -> setTimerPeriod(e));
 		this.view.getRoads_color_btn1().addChangeListener(e -> view.getDrawPanel().setRoadColor(true));
 		this.view.getRoads_color_btn2().addChangeListener(e -> view.getDrawPanel().setRoadColor(false));
+		this.view.getZoomP().addActionListener(e -> {
+			view.getDrawPanel().setZoomFactor(view.getDrawPanel().getZoomFactor() * 1.1);
+			view.getDrawPanel().repaint();
+		});
+		this.view.getZoomM().addActionListener(e -> {
+			view.getDrawPanel().setZoomFactor(view.getDrawPanel().getZoomFactor() / 1.1);
+			view.getDrawPanel().repaint();
+		});
 	}
 	
 	private void setTimerPeriod(ChangeEvent e) {
 	     timer.stop();
 		 JSlider source = (JSlider)e.getSource();
-		 int newPeriod = source.getValue();
-	     simulator_time = (double) newPeriod / 10;
+		 defaultPeriod = source.getValue();
 	     if (state) timer.restart();
 	}
 
@@ -78,3 +83,5 @@ public class Controller{
 		this.sim = sim;
 	}
 }
+
+

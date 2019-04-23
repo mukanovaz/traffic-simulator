@@ -19,6 +19,18 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.RectangleInsets;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RefineryUtilities;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -38,7 +50,7 @@ public class Main {
         JFrame frame = new JFrame();
 
         ChartPanel drawingPanel;
-        JFreeChart chart = makeBarChart();
+        JFreeChart chart = makePieChart();
         
         drawingPanel = new ChartPanel(chart);
         //DrawingPane drawingPanel = new DrawingPane();
@@ -152,6 +164,54 @@ public class Main {
 	        // Zobrazeni hodnoty u kazdeho sloupce
 	        renderer.setBaseItemLabelGenerator(new StandardCategoryItemLabelGenerator());
 	        renderer.setBaseItemLabelsVisible(true);
+
+	        return chart;
+	    }
+	 
+	 private JFreeChart createChart(XYDataset dataset)
+	    {
+	        final JFreeChart chart = ChartFactory.createXYLineChart(
+	            "Линейный график 2",
+	            null,                        // x axis label
+	            null,                        // y axis label
+	            dataset,                     // data
+	            PlotOrientation.VERTICAL,
+	            true,                        // include legend
+	            false,                       // tooltips
+	            false                        // urls
+	        );
+
+	        chart.setBackgroundPaint(Color.white);
+
+	        final XYPlot plot = chart.getXYPlot();
+	        plot.setBackgroundPaint(new Color(232, 232, 232));
+
+	        plot.setDomainGridlinePaint(Color.gray);
+	        plot.setRangeGridlinePaint (Color.gray);
+	        
+	        // Определение отступа меток делений
+	        plot.setAxisOffset(new RectangleInsets (1.0, 1.0, 1.0, 1.0));
+
+	        // Скрытие осевых линий и меток делений
+	        ValueAxis axis = plot.getDomainAxis();
+	        axis.setAxisLineVisible (false);    // осевая линия
+	        
+	        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+	        // Удаление связующих линий Series 1
+	        renderer.setSeriesLinesVisible (0, false);
+	        // Удаление меток Series 2
+	        renderer.setSeriesShapesVisible(1, false);
+
+	        // Настройка графика (цвет, ширина линии) Series 3
+	        renderer.setSeriesPaint        (2, Color.orange);
+	        renderer.setSeriesStroke       (2, new BasicStroke(2.5f));
+	        plot.setRenderer(renderer);
+	        
+	        // Настройка NumberAxis
+	        final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+	        
+	        rangeAxis.setAxisLineVisible (false);
+	        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
 	        return chart;
 	    }
