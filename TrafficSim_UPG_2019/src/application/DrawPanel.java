@@ -2,6 +2,7 @@ package application;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.MouseInfo;
@@ -19,22 +20,34 @@ import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.io.File;
+import java.io.IOException;
 import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
+
+import com.sun.org.apache.xml.internal.security.Init;
 
 import TrafficSim.Car;
 import TrafficSim.CrossRoad;
+import TrafficSim.Direction;
 import TrafficSim.EndPoint;
 import TrafficSim.RoadSegment;
 import TrafficSim.Simulator;
+import TrafficSim.TrafficLight;
 import TrafficSim.Lane;
 
-public class DrawPanel extends JPanel implements MouseWheelListener, MouseListener, MouseMotionListener {
+public class DrawPanel extends JPanel  implements Printable{
 	private static final long serialVersionUID = 1L;
 	private final int MARGIN = 10;
 	// Max a Min of crossroad in meters
@@ -60,56 +73,54 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 	private List<MyLane> laneList;
 	// Array to compute max and min points
 	private List<Point2D> points_array;
-	private List<Shape> shapes;
+	private HashMap<Shape, Lane> roads;
+	private HashMap<Car, Shape> cars;
 	private int simulation_time;
+	private float laneSize;
+	private boolean roadColor = true;
+	private boolean speedVisible = false;
 	
 	private double zoomFactor = 1;
     private double prevZoomFactor = 1;
     private boolean zoomer;
-    private boolean dragger;
-    private boolean released;
     private double xOffset = 0;
     private double yOffset = 0;
-    private int xDiff;
-    private int yDiff;
     private DrawingTool dr = new DrawingTool();
+    
+    private HashMap<Lane, List<DataSet>> dataSet = new HashMap<Lane, List<DataSet>>();
     
     AffineTransform saveTransform;
     AffineTransform at;   // the current pan and zoom transform
     double translateX;
 	double translateY;
-    
-	public DrawPanel() {
-		initComponent();
-	}
 	
-	private void initComponent() {
-		addMouseWheelListener(this);
-		addMouseMotionListener(this);
-		addMouseListener(this);
-	}
+	private BufferedImage car1;
+	private BufferedImage car2;
+	private BufferedImage car3;
+    
+	public DrawPanel() {}
 	
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		shapes = new ArrayList<Shape>();
+		
+		roads = new HashMap<Shape, Lane>();
+		cars = new HashMap<Car, Shape>();
 		
 		Graphics2D g2 = (Graphics2D)g; 
-		// Set background color
-		g2.setColor(new Color(230, 255, 204));
-		g2.fillRect(0, 0, this.getWidth(), this.getHeight());
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		drawComponent(g2);
 		
-		computeModel2WindowTransformation(getWidth(), getHeight());
-		setZoomer(g2);
-		setDragger(g2);
-        
-		// Draw crossroads
-		g2.translate(MARGIN, MARGIN);
-		
-		drawTrafficState(sim, g2);	
+		CrossRoad[] cross = sim.getCrossroads();	
+		for (CrossRoad crossRoad : cross) {
+			TrafficLight[] lights = crossRoad.getTrafficLights(Direction.Entry);
+			
+			for(int i=1; i<lights.length; i++) {
+				if(lights[i]==null) continue;
+			}
+		}
 		
 		
+//		dr.drawTrafficLight(new Point2D.Double(100,100), scale, g2);
 	}
 	
 	private void setDragger(Graphics2D g2) {
@@ -173,6 +184,14 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 			      .min(Comparator.comparing(Point2D::getY))
 			      .get().getY(); 
 		
+		try {
+			car1 = ImageIO.read(new File("img/1.jpg"));
+			car2 = ImageIO.read(new File("img/2.jpg"));
+			car3 = ImageIO.read(new File("img/3.jpg"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void computeModel2WindowTransformation(int width, int height) {
@@ -203,7 +222,7 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 		Car[] cars = sim.getCars();
 		
 		for (int i = 0; i < cars.length; i++) {
-			drawCar(cars[i].getPosition(), cars[i].getOrientation(), (int) cars[i].getLength(), (int) laneSize, cars[i].getCurrentSpeed(), g);
+			drawCar(cars[i], (int) laneSize, g);
 		}
 	}
   
@@ -216,7 +235,8 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 			for (Lane lane : lanes) {
 				connectLanes(lane, g2d);
 			}
-		}	
+		}
+		
 	}
 	
 	private void connectLanes(Lane lane, Graphics2D g) {
@@ -260,41 +280,51 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 		drawLane(start, end,(int) s.getLaneWidth(), g, lane);
 	}
 	
-	private void drawCar(Point2D position, double orientation, int lenght, int width, double speed, Graphics2D g) {
-		position = model2window(position);
-		g.setStroke(new BasicStroke((float) width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		switch (lenght) {
-		case 4:
-			g.setColor(new Color(242,238,215));
+	private void drawCar(Car car, int lenght, Graphics2D g) {
+		int w = (int) car.getLength();
+		int width = (int) car.getLength() * (int) scale;
+		
+		Point2D position = model2window(car.getPosition());
+		
+		defaultTrsnsform = g.getTransform();
+		g.translate(position.getX(), position.getY());
+		drawSpeedString(speedVisible, car.getCurrentSpeed(), g);
+
+		g.rotate(-(car.getOrientation() + Math.PI / 2));
+		
+		switch (w) {
+		case 4: // 8
+			g.drawImage(car2, - lenght / 2, - width / 2, lenght/2, width/2, 0, 0, (int)(car2.getWidth()), (int)(car2.getHeight()), null);
 			break;
-		case 5:
-			g.setColor(new Color(242,234,184));
+		case 5: // 10
+			g.drawImage(car3,  - lenght / 2, - width / 2, lenght/2, width/2, 0, 0, (int)(car3.getWidth()), (int)(car3.getHeight()), null);
 			break;
-		case 6:
-			g.setColor(new Color(243,231,156));
+		case 6: // 12
+			g.drawImage(car1,  - lenght / 2, - width / 2, lenght/2, width/2, 0, 0, (int)(car1.getWidth()), (int)(car1.getHeight()), null);
 			break;
-		case 7:
-			g.setColor(new Color(233,215,140));
+		case 7: // 14
+			g.drawImage(car1,  - lenght / 2, - width / 2, lenght/2, width/2, 0, 0, (int)(car1.getWidth()), (int)(car1.getHeight()), null);
 			break;
 		default:
 			g.setColor(Color.BLACK);
 			break;
-		}
-		
-		defaultTrsnsform = g.getTransform();
-		g.translate(position.getX(), position.getY());
-
-		Line2D car = new Line2D.Double(0, 0, 0, lenght-1);
-		g.rotate(-(orientation + Math.PI / 2));
-		
-		if (java.lang.Double.toString(orientation) != "NaN") 
-			g.draw(car);
-		g.fill(car);
+		}		
 		g.setTransform(defaultTrsnsform);
+		cars.put(car, new Rectangle2D.Double(position.getX() - lenght / 2, position.getY() - width / 2, position.getX() + lenght/2, position.getY() + width/2));
 	}
 	
-	private float laneSize;
-	private Boolean roadColor = true;
+	private void drawSpeedString(boolean b, double speed, Graphics2D g) {
+		if (b) {
+			FontMetrics metrics = g.getFontMetrics(g.getFont());
+			
+			g.setColor(Color.BLACK);
+			String text = String.format("%.3g", speed);
+			double xF = 0 - metrics.stringWidth(text) - 15;
+			double yF = 0 + metrics.getAscent()/3.0;
+			g.drawString(text, (float) xF, (float) yF);
+		}
+	}
+
 	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g, Lane l) {
 		double value;
 		if (roadColor) {
@@ -318,21 +348,22 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 		Point2D s = model2window(start);
 		Point2D e = model2window(end);
 		
-		  GeneralPath path = new GeneralPath();
-	        path.moveTo(s.getX(), s.getY());
-	        path.lineTo(e.getX(), e.getY());
-	        path.closePath();
-
-		shapes.add(lane);
+		GeneralPath path = new GeneralPath();
+		path.moveTo(s.getX(), s.getY());
+		path.lineTo(e.getX(), e.getY());
+		path.closePath();
+		
+		roads.put(path, l);
 		laneSize = (float)size * (float) scale;
 		g.setStroke(new BasicStroke((float)size * (float) scale, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
 		g.draw(lane);
 	}
 	
 	private void drawRoadSegment(Graphics2D g) {
+		int i = 0;
 		for (MyLane myLane : laneList) {
 			drawLane(myLane.getStart(), myLane.getEnd(), (int) myLane.getSize(), g, myLane.getLine());
-//			lanesDataSet.put(myLane.getLine(), new DataSet(simulation_time, myLane.getLine().getNumberOfCarsTotal()));
+			i++;
 		}
 	}
 	
@@ -392,7 +423,7 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 			points_array.add(y);
 
 			connectionList.add(new Road(i + 1, road.getId(), x, y));
-			laneList.add(new MyLane(x, y, (int) road.getLaneWidth(), road.getLane(i)));
+			laneList.add(new MyLane(x, y, (int) road.getLaneWidth(), road.getLane(i+1)));
 		
 			x1 = x1p;
 			x2 = x2p;
@@ -438,6 +469,21 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 		
 	}
 	
+	public void drawComponent(Graphics2D g2d) {	
+		// Set background color
+		g2d.setColor(new Color(230, 255, 204));
+		g2d.fillRect(0, 0, this.getWidth(), this.getHeight());
+		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		
+		computeModel2WindowTransformation(getWidth(), getHeight());
+		setZoomer(g2d);
+		setDragger(g2d);
+		
+		// Draw crossroads
+		g2d.translate(MARGIN, MARGIN);
+		drawTrafficState(sim, g2d);	
+	}
+	
 	public Simulator getSim() {
 		return sim;
 	}
@@ -450,101 +496,6 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 		this.roadColor = roadColor;
 	}
 	
-	private int xPos,yPos;
-	private Point2D startPoint;
-	private double referenceX;
-	private double referenceY;
-	// saves the initial transform at the beginning of the pan interaction
-	AffineTransform initialTransform;
-		
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		 // first transform the mouse point to the pan and zoom
-	    // coordinates. We must take care to transform by the
-	    // initial tranform, not the updated transform, so that
-	    // both the initial reference point and all subsequent
-	    // reference points are measured against the same origin.
-	    try {
-	    	startPoint = initialTransform.inverseTransform(e.getPoint(), null);
-	    }
-	    catch (NoninvertibleTransformException te) {
-	    	System.out.println(te);
-	    }
-
-	    // the size of the pan translations 
-	    // are defined by the current mouse location subtracted
-	    // from the reference location
-	    double deltaX = startPoint.getX() - referenceX;
-	    double deltaY = startPoint.getY() - referenceY;
-
-	    // make the reference point be the new mouse point. 
-	    referenceX = startPoint.getX();
-	    referenceY = startPoint.getY();
-	    
-	    translateX += deltaX;
-	    translateY += deltaY;
- 
-	    // schedule a repaint.
-	    repaint();
-	}
-
-	@Override
-	public void mouseMoved(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		for (int i = 0; i < shapes.size(); i++) {
-            Shape shape = shapes.get(i);
-            
-            Rectangle2D range = new Rectangle2D.Double(e.getX() - laneSize, e.getY() - laneSize, laneSize, laneSize);
-            
-            if (shape.intersects(range)) {
-            	System.out.println(i);
-//                LaneGraph w = new LaneGraph();
-//                w.NewScreen();
-            }
-        }
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mousePressed(MouseEvent e) {
-		try {
-			startPoint = at.inverseTransform(e.getPoint(), null);
-		}
-		catch (NoninvertibleTransformException te) {
-			System.out.println(te);
-		}
-		
-		// save the transformed starting point and the initial
-	    // transform
-	    referenceX = startPoint.getX();
-	    referenceY = startPoint.getY();
-	    initialTransform = at;
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e) {
-	}
-
 	public void setZoomFactor(double zoomFactor) {
 		this.zoomFactor = zoomFactor;
 	}
@@ -553,16 +504,81 @@ public class DrawPanel extends JPanel implements MouseWheelListener, MouseListen
 		return this.zoomFactor;
 	}
 
-	public void setxDiff(int xDiff) {
-		this.xDiff = xDiff;
-	}
-
-	public void setyDiff(int yDiff) {
-		this.yDiff = yDiff;
-	}
-
 	public void setSimulation_time(int simulation_time) {
 		this.simulation_time = simulation_time;
 	}
+
+	public double getTranslateX() {
+		return translateX;
+	}
+
+	public void setTranslateX(double translateX) {
+		this.translateX = translateX;
+	}
+
+	public double getTranslateY() {
+		return translateY;
+	}
+
+	public void setTranslateY(double translateY) {
+		this.translateY = translateY;
+	}
+
+	public AffineTransform getAt() {
+		return at;
+	}
+
+	public HashMap<Shape, Lane> getRoads() {
+		return roads;
+	}
+
+	public float getLaneSize() {
+		return laneSize;
+	}
+
+	@Override
+	public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+		if (pageIndex > 0) {
+			return NO_SUCH_PAGE;
+		}
+		
+		Graphics2D g2 = (Graphics2D)graphics;
+		
+		g2.rotate(Math.toRadians(90));
+		g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+		// Samotne vykresleni obsahu
+		drawComponent(g2);
+		return PAGE_EXISTS;
+	}
+
+	public void setSpeedVisible(boolean b) {
+		speedVisible = b;
+	}
+
+	public HashMap<Car, Shape> getCars() {
+		return cars;
+	}
+
+	public void updateDataSet(double i) {
+		for (MyLane myLane : laneList) {
+			Lane lane = myLane.getLine();
+			
+			if (!dataSet.containsKey(lane)) {
+				List<DataSet> d = new ArrayList<DataSet>();
+				d.add(new DataSet(i, lane.getNumberOfCarsCurrent(), lane.getNumberOfCarsTotal(), lane.getSpeedAverage()));
+				dataSet.put(lane, d);
+			} else {
+				List<DataSet> d = dataSet.get(lane);
+				d.add(new DataSet(i, lane.getNumberOfCarsCurrent(), lane.getNumberOfCarsTotal(), lane.getSpeedAverage()));
+				dataSet.replace(lane, d);
+			}
+		}
+	}
+
+	public HashMap<Lane, List<DataSet>> getDataSet() {
+		return dataSet;
+	}
+
 }
 

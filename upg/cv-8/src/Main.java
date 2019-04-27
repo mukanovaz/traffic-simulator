@@ -50,18 +50,19 @@ public class Main {
         JFrame frame = new JFrame();
 
         ChartPanel drawingPanel;
-        JFreeChart chart = makePieChart();
+        JFreeChart chart = makeLineChart();
         
         drawingPanel = new ChartPanel(chart);
-        //DrawingPane drawingPanel = new DrawingPane();
-//		SimpleGraph graph = new SimpleGraph(x, y);
-//		drawingPanel.setGraph(graph);
-
-        drawingPanel.setPreferredSize(new Dimension(640, 480));
+        
+//        DrawingPane drawingPanel = new DrawingPane();
+//
+//        drawingPanel.setPreferredSize(new Dimension(640, 480));
 		frame.add(drawingPanel);
 		
-		double[] x = new double[] {1.2, 1.6, 3.5, 4, 5};
-		double[] y = new double[] {1.4,1.1,1,3.2,2.5};
+//		double[] x = new double[] {1.2, 1.6, 3.5, 4, 5};
+//		double[] y = new double[] {1.4,1.1,1,3.2,2.5};
+//		SimpleGraph graph = new SimpleGraph(x, y);
+//		drawingPanel.setGraph(graph);
 		 
         // Standardni manipulace s oknem
         frame.setTitle("Kresleni");

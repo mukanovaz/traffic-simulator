@@ -13,17 +13,19 @@ public class DrawingTool {
 	public DrawingTool() {
 	}
 	
-	public void drawTrafficLight (Point2D pos, Graphics2D g) {
+	public void drawTrafficLight (Point2D pos, double scale, Graphics2D g) {
 		g.setColor(Color.DARK_GRAY);
-		Line2D lane = new Line2D.Double(pos, (new Point2D.Double(pos.getX(), pos.getY() - 25)));
-		Line2D lane2 = new Line2D.Double(pos, (new Point2D.Double(pos.getX(), pos.getY() + 15)));
-		g.setStroke(new BasicStroke((float)4, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+		Line2D lane = new Line2D.Double(pos, (new Point2D.Double(pos.getX(), pos.getY() - 10 * scale)));
+		Line2D lane2 = new Line2D.Double(pos, (new Point2D.Double(pos.getX(), pos.getY() + 7 * scale)));
+		g.setStroke(new BasicStroke((float)scale, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
 		g.draw(lane2);
-		g.setStroke(new BasicStroke((float)15, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+		g.setStroke(new BasicStroke((float)scale * 6, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
 		g.draw(lane);
-		drawCircle(pos, 5, 2, Color.gray, g);
-		drawCircle(pos, 5, 13, Color.gray, g);
-		drawCircle(pos, 5, 23, Color.gray, g);
+		
+		int r = (int) scale * 3;
+		drawCircle(pos, r, 2, Color.gray, g);
+		drawCircle(pos, r, r * scale, Color.gray, g);
+		drawCircle(pos, r, r * scale * 2 , Color.gray, g);
 	}
 	
 	private void drawCircle(Point2D center, int radius, double offset, Color c, Graphics2D g) {
@@ -34,14 +36,6 @@ public class DrawingTool {
 		g.fill(light);
 	}
 
-	public void drawSmallCar (Point2D pos, double orientation, int lenght, int width, double speed, Graphics2D g) {
-		
-	}
-
-	public void drawMediumCar (Point2D pos, double orientation, int lenght, int width, double speed, Graphics2D g) {
-		
-	}
-	
 	public void drawLargeCar (Point2D pos, double orientation, int lenght, int width, double speed, Graphics2D g) {
 		AffineTransform defaultTrsnsform = g.getTransform();
 		g.translate(pos.getX(), pos.getY());

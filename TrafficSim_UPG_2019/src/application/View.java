@@ -46,7 +46,10 @@ public class View extends JFrame{
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
 	private JMenu menuHelp = new JMenu("Help");
-	private JMenuItem item = new JMenuItem("Open");
+	private JMenuItem item = new JMenuItem("Print map and graph");
+	private JMenuItem item2 = new JMenuItem("Export to bitmap");
+	private JMenuItem item3 = new JMenuItem("Export to SVG");
+	
 	private JMenuItem itemExit = new JMenuItem("Exit");
 	private JMenuItem itemAbout = new JMenuItem("About");
 	private final Panel top_panel = new Panel();
@@ -58,14 +61,15 @@ public class View extends JFrame{
 	private final JLabel timer_label = new JLabel("0.0");
 	private JComboBox<String> scenar = new JComboBox<String>();
 	private DrawPanel panel;
-	private JSlider slider = new JSlider(0, 100);	
+	private JSlider slider = new JSlider(0, 200);	
 	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
 	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
 	private ButtonGroup roads_colors_group = new ButtonGroup();
 	private JButton zoomP = new JButton("+");
 	private JButton zoomM = new JButton("-");
-	private JButton b1 = new JButton("+");
-	private JButton b2 = new JButton("-");
+	private JToggleButton b1 = new JToggleButton("Select road");
+	private JToggleButton b2 = new JToggleButton("Show cars speed");
+	private JButton b3 = new JButton("Show graph"); 
 	
 	public View() {
 		panel = new DrawPanel();
@@ -80,6 +84,8 @@ public class View extends JFrame{
         menuBar.add(menuHelp);
         item.setSelected(true);
         menuFile.add(item);
+        menuFile.add(item2);
+        menuFile.add(item3);
         menuFile.addSeparator();
         menuFile.add(itemExit);
         menuHelp.add(itemAbout);
@@ -91,11 +97,12 @@ public class View extends JFrame{
         labelTable.put(0, new JLabel("0"));
         labelTable.put(50, new JLabel("50"));
         labelTable.put(100, new JLabel("100"));
+        labelTable.put(150, new JLabel("150"));
+        labelTable.put(200, new JLabel("200"));
         
         slider.setLabelTable(labelTable);
         slider.setPaintTicks(true);
         slider.setPaintLabels(true);
-        slider.setMinorTickSpacing(1);
         slider.setSnapToTicks(false);
         slider.setMajorTickSpacing(5);
         slider.setPaintTicks(true);
@@ -145,11 +152,17 @@ public class View extends JFrame{
 	private Component addOtherPanel() {
 		JPanel p1 = new JPanel();
 		p1.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		p1.setLayout(new BoxLayout(p1, BoxLayout.LINE_AXIS));
-		p1.setBorder(new TitledBorder("Colors"));
+		p1.setLayout(new BoxLayout(p1, BoxLayout.PAGE_AXIS));
+		p1.setBorder(new TitledBorder("Other"));
+		b1.setMaximumSize(new Dimension(145,25));
+		b2.setMaximumSize(new Dimension(145,25));
+		b3.setMaximumSize(new Dimension(145,25));
 		p1.add(b1);
 		p1.add(Box.createRigidArea(new Dimension(5,5)));
 		p1.add(b2);
+		p1.add(Box.createRigidArea(new Dimension(5,5)));
+		p1.add(b3);
+		p1.add(Box.createRigidArea(new Dimension(5,5)));
 		return p1;
 	}
 
@@ -230,6 +243,34 @@ public class View extends JFrame{
 
 	public JButton getZoomM() {
 		return zoomM;
+	}
+
+	public JToggleButton getSelectRoad() {
+		return b1;
+	}
+
+	public JMenuItem getItem() {
+		return item;
+	}
+
+	public JMenuItem getItem2() {
+		return item2;
+	}
+
+	public JMenuItem getItem3() {
+		return item3;
+	}
+
+	public JToggleButton getB1() {
+		return b1;
+	}
+
+	public JToggleButton getB2() {
+		return b2;
+	}
+
+	public JButton getB3() {
+		return b3;
 	}
 	
 	
