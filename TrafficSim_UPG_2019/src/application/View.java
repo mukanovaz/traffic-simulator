@@ -38,6 +38,7 @@ import java.awt.Component;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 
 public class View extends JFrame{
 
@@ -65,12 +66,31 @@ public class View extends JFrame{
 	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
 	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
 	private ButtonGroup roads_colors_group = new ButtonGroup();
-	private JButton zoomP = new JButton("+");
-	private JButton zoomM = new JButton("-");
+	private JButton zoomP = new JButton();
+	private JButton zoomM = new JButton();
+	private JToggleButton controlBtn = new JToggleButton();
 	private JToggleButton b1 = new JToggleButton("Select road");
 	private JToggleButton b2 = new JToggleButton("Show cars speed");
 	private JButton b3 = new JButton("Show graph"); 
 	
+//	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
+//	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
+//	private ButtonGroup roads_colors_group = new ButtonGroup();
+//	private JButton zoomP = new JButton("+");
+//	private JButton zoomM = new JButton("-");
+//	private JToggleButton controlBtn = new JToggleButton("Allow control");
+//	private JToggleButton b1 = new JToggleButton("Select road");
+//	private JToggleButton b2 = new JToggleButton("Show cars speed");
+//	private JButton b3 = new JButton("Show graph"); 
+	
+	private void seButtons () {
+		controlBtn.setBorder(null);
+        controlBtn.setIcon(new ImageIcon("img/edit.png"));
+        zoomP.setBorder(null);
+        zoomP.setIcon(new ImageIcon("img/zoom-in.png"));
+        zoomM.setBorder(null);
+        zoomM.setIcon(new ImageIcon("img/zoom-out.png"));
+	}
 	public View() {
 		panel = new DrawPanel();
 		this.setTitle("Crossroad - Mukanova Zhanel");
@@ -135,8 +155,8 @@ public class View extends JFrame{
         roads_colors_group.add(roads_color_btn2);
        
         right_panel.add(addColorsPanel());
-        right_panel.add(addZoomPanel());
         right_panel.add(addOtherPanel());
+        right_panel.add(addZoomPanel());
         
         roads_color_btn1.setSelected(true);
         
@@ -147,6 +167,8 @@ public class View extends JFrame{
 			getScenar().addItem(s);
 		}
         sim = null;
+        
+        seButtons();
     }
 	
 	private Component addOtherPanel() {
@@ -169,8 +191,10 @@ public class View extends JFrame{
 	private Component addZoomPanel() {
 		JPanel p2 = new JPanel();
 		p2.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        p2.setLayout(new BoxLayout(p2, BoxLayout.LINE_AXIS));
+        p2.setLayout(new BoxLayout(p2, BoxLayout.X_AXIS));
         p2.setBorder(new TitledBorder("Zoom"));
+        p2.add(controlBtn);
+        p2.add(Box.createRigidArea(new Dimension(5,5)));
         p2.add(zoomP);
         p2.add(Box.createRigidArea(new Dimension(5,5)));
         p2.add(zoomM);
@@ -271,6 +295,9 @@ public class View extends JFrame{
 
 	public JButton getB3() {
 		return b3;
+	}
+	public JToggleButton getControlBtn() {
+		return controlBtn;
 	}
 	
 	

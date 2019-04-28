@@ -79,6 +79,7 @@ public class DrawPanel extends JPanel  implements Printable{
 	private float laneSize;
 	private boolean roadColor = true;
 	private boolean speedVisible = false;
+	private boolean allowEdit = false;
 	
 	private double zoomFactor = 1;
     private double prevZoomFactor = 1;
@@ -534,6 +535,10 @@ public class DrawPanel extends JPanel  implements Printable{
 
 	public float getLaneSize() {
 		return laneSize;
+	}
+	
+	public void setAllowEdit(boolean allowEdit) {
+		this.allowEdit = allowEdit;
 	}
 
 	@Override

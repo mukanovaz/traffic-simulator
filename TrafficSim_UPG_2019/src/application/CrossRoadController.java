@@ -96,14 +96,21 @@ public class CrossRoadController{
 		this.view.getSlider().addChangeListener(e -> setTimerPeriod(e));
 		this.view.getRoads_color_btn1().addChangeListener(e -> view.getDrawPanel().setRoadColor(true));
 		this.view.getRoads_color_btn2().addChangeListener(e -> view.getDrawPanel().setRoadColor(false));
+		
 		this.view.getZoomP().addActionListener(e -> {
-			view.getDrawPanel().setZoomFactor(view.getDrawPanel().getZoomFactor() * 1.1);
-			view.getDrawPanel().repaint();
+			if (panner.isAllowEdit()) {
+				view.getDrawPanel().setZoomFactor(view.getDrawPanel().getZoomFactor() * 1.1);
+				view.getDrawPanel().repaint();				
+			}
 		});
+		
 		this.view.getZoomM().addActionListener(e -> {
-			view.getDrawPanel().setZoomFactor(view.getDrawPanel().getZoomFactor() / 1.1);
-			view.getDrawPanel().repaint();
+			if (panner.isAllowEdit()) {
+				view.getDrawPanel().setZoomFactor(view.getDrawPanel().getZoomFactor() / 1.1);
+				view.getDrawPanel().repaint();				
+			}
 		});
+		
 		this.view.getItem2().addActionListener(e -> {
 			JFileChooser fileChooser = new JFileChooser();
 			if (fileChooser.showSaveDialog(view.getDrawPanel()) == JFileChooser.APPROVE_OPTION) {
@@ -117,8 +124,8 @@ public class CrossRoadController{
 			  saveImage(img, file.getPath());
 			}
 		});
+		
 		this.view.getItem().addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				PrinterJob job = PrinterJob.getPrinterJob();
@@ -135,7 +142,6 @@ public class CrossRoadController{
 		});
 		
 		this.view.getB2().addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				AbstractButton abstractButton =  
@@ -149,10 +155,28 @@ public class CrossRoadController{
                 } 
 			}
 		});
+		
 		this.view.getB3().addActionListener(e -> {
 			if (this.view.getDrawPanel().getDataSet().size() == 0) return;
 			laneGraph = new GraphController(null, this.view.getDrawPanel().getDataSet());
 			laneGraph.NewScreen();
+		});
+		
+		this.view.getControlBtn().addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				AbstractButton abstractButton =  
+						(AbstractButton)e.getSource(); 
+				boolean selected = abstractButton.getModel().isSelected(); 
+				if (selected) { 
+					panner.setAllowEdit(true);
+				} 
+				else { 
+					panner.setDefaultPos();		
+					panner.setAllowEdit(false);
+				} 
+			}
 		});
 	}
 	
@@ -185,49 +209,56 @@ class DragHandler implements MouseListener, MouseMotionListener {
 	private Point2D startPoint;
 	private double referenceX;
 	private double referenceY;
+	private boolean allowEdit = false;
 	// saves the initial transform at the beginning of the pan interaction
 	AffineTransform initialTransform;
 		
 	public DragHandler(DrawPanel dp) {
 		this.dp = dp;
 	}
+	
+	public void setDefaultPos () {
+		dp.setZoomFactor(1);
+		dp.setTranslateX(0);
+		dp.setTranslateY(0);
+		dp.repaint();
+	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-		 // first transform the mouse point to the pan and zoom
-	    // coordinates. We must take care to transform by the
-	    // initial tranform, not the updated transform, so that
-	    // both the initial reference point and all subsequent
-	    // reference points are measured against the same origin.
-	    try {
-	    	startPoint = initialTransform.inverseTransform(e.getPoint(), null);
-	    }
-	    catch (NoninvertibleTransformException te) {
-	    	System.out.println(te);
-	    }
-
-	    // the size of the pan translations 
-	    // are defined by the current mouse location subtracted
-	    // from the reference location
-	    double deltaX = startPoint.getX() - referenceX;
-	    double deltaY = startPoint.getY() - referenceY;
-
-	    // make the reference point be the new mouse point. 
-	    referenceX = startPoint.getX();
-	    referenceY = startPoint.getY();
-	    
-	    dp.setTranslateX(dp.getTranslateX() + deltaX);
-	    dp.setTranslateY(dp.getTranslateY() + deltaY);
- 
-	    // schedule a repaint.
-	    dp.repaint();
+		if (allowEdit) {
+			// first transform the mouse point to the pan and zoom
+			// coordinates. We must take care to transform by the
+			// initial tranform, not the updated transform, so that
+			// both the initial reference point and all subsequent
+			// reference points are measured against the same origin.
+			try {
+				startPoint = initialTransform.inverseTransform(e.getPoint(), null);
+			}
+			catch (NoninvertibleTransformException te) {
+				System.out.println(te);
+			}
+			
+			// the size of the pan translations 
+			// are defined by the current mouse location subtracted
+			// from the reference location
+			double deltaX = startPoint.getX() - referenceX;
+			double deltaY = startPoint.getY() - referenceY;
+			
+			// make the reference point be the new mouse point. 
+			referenceX = startPoint.getX();
+			referenceY = startPoint.getY();
+			
+			dp.setTranslateX(dp.getTranslateX() + deltaX);
+			dp.setTranslateY(dp.getTranslateY() + deltaY);
+			
+			// schedule a repaint.
+			dp.repaint();
+		}
 	}
 
 	@Override
-	public void mouseMoved(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseMoved(MouseEvent arg0) {}
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -239,45 +270,48 @@ class DragHandler implements MouseListener, MouseMotionListener {
 			 Shape shape = (Shape) m.getKey();
 			 
 			 Rectangle2D range = new Rectangle2D.Double(e.getX() - laneSize, e.getY() - laneSize, laneSize, laneSize);
-	            
-	            if (shape.intersects(range)) {
-	            	Lane lane = (Lane) m.getValue();
-	            	GraphController laneGraph = new GraphController(lane, dp.getDataSet());
-	    			laneGraph.NewScreen();
-	            }
+			 if (shape.intersects(range)) {
+				 Lane lane = (Lane) m.getValue();
+				 if (dp.getDataSet().size() == 0) return;
+				 GraphController laneGraph = new GraphController(lane, dp.getDataSet());
+				 laneGraph.NewScreen();
+			 }
 		} 
 	}
 
 	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void mousePressed(MouseEvent e) {
-		try {
-			startPoint = dp.getAt().inverseTransform(e.getPoint(), null);
+		if (allowEdit) {
+			try {
+				startPoint = dp.getAt().inverseTransform(e.getPoint(), null);
+			}
+			catch (NoninvertibleTransformException te) {
+				System.out.println(te);
+			}
+			
+			// save the transformed starting point and the initial
+			// transform
+			referenceX = startPoint.getX();
+			referenceY = startPoint.getY();
+			initialTransform =  dp.getAt();
 		}
-		catch (NoninvertibleTransformException te) {
-			System.out.println(te);
-		}
-		
-		// save the transformed starting point and the initial
-	    // transform
-	    referenceX = startPoint.getX();
-	    referenceY = startPoint.getY();
-	    initialTransform =  dp.getAt();
 	}
 
 	@Override
-	public void mouseReleased(MouseEvent e) {
+	public void mouseEntered(MouseEvent e) {}
+
+	@Override
+	public void mouseExited(MouseEvent e) {}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {}
+
+	public void setAllowEdit(boolean allowEdit) {
+		this.allowEdit = allowEdit;
+	}
+
+	public boolean isAllowEdit() {
+		return allowEdit;
 	}
 }
 
