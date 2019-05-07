@@ -137,6 +137,7 @@ public class GraphView  extends JFrame{
 
 	public void setData(Lane lane, HashMap<Lane, List<DataSet>> dataSet) {
 		List<DataSet> d = (List<DataSet>) dataSet.get(lane);
+		if (d == null) return; 
 		graphName = lane.getId(); 
 		data1 = new XYSeries("Number of cars current");
 		data2 = new XYSeries("Number of cars total");

@@ -47,7 +47,7 @@ public class View extends JFrame{
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu menuFile = new JMenu("File");
 	private JMenu menuHelp = new JMenu("Help");
-	private JMenuItem item = new JMenuItem("Print map and graph");
+	private JMenuItem item = new JMenuItem("Print map");
 	private JMenuItem item2 = new JMenuItem("Export to bitmap");
 	private JMenuItem item3 = new JMenuItem("Export to SVG");
 	
@@ -66,22 +66,13 @@ public class View extends JFrame{
 	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
 	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
 	private ButtonGroup roads_colors_group = new ButtonGroup();
+	private ButtonGroup roads_other_group = new ButtonGroup();
 	private JButton zoomP = new JButton();
 	private JButton zoomM = new JButton();
 	private JToggleButton controlBtn = new JToggleButton();
 	private JToggleButton b1 = new JToggleButton("Select road");
 	private JToggleButton b2 = new JToggleButton("Show cars speed");
 	private JButton b3 = new JButton("Show graph"); 
-	
-//	private JToggleButton roads_color_btn1 = new JToggleButton("Speed Average");
-//	private JToggleButton roads_color_btn2 = new JToggleButton("Number of cars");
-//	private ButtonGroup roads_colors_group = new ButtonGroup();
-//	private JButton zoomP = new JButton("+");
-//	private JButton zoomM = new JButton("-");
-//	private JToggleButton controlBtn = new JToggleButton("Allow control");
-//	private JToggleButton b1 = new JToggleButton("Select road");
-//	private JToggleButton b2 = new JToggleButton("Show cars speed");
-//	private JButton b3 = new JButton("Show graph"); 
 	
 	private void seButtons () {
 		controlBtn.setBorder(null);
@@ -91,6 +82,7 @@ public class View extends JFrame{
         zoomM.setBorder(null);
         zoomM.setIcon(new ImageIcon("img/zoom-out.png"));
 	}
+	
 	public View() {
 		panel = new DrawPanel();
 		this.setTitle("Crossroad - Mukanova Zhanel");
@@ -153,7 +145,7 @@ public class View extends JFrame{
         roads_color_btn2.setMaximumSize(new Dimension(145,25));
         roads_colors_group.add(roads_color_btn1);
         roads_colors_group.add(roads_color_btn2);
-       
+        
         right_panel.add(addColorsPanel());
         right_panel.add(addOtherPanel());
         right_panel.add(addZoomPanel());

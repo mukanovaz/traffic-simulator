@@ -1,10 +1,1 @@
-if exist "compile\" rmdir /Q /S compile
-mkdir compile
-cd /d compile
-jar xf ..\TrafficSim.jar
-cd /d ../bin
-xcopy /E application ..\compile\application\
-cd /d ..\compile
-jar cfm run.jar ..\MANIFEST.MF application\*.class TrafficSim\*.class
-cd /d ..\
-java -jar compile\run.jar %*
+java -cp .\bin;.\lib\jfreesvg-3.3.jar;lib\jcommon-1.0.23.jar;lib\jfreechart-1.0.19.jar;lib\TrafficSim.jar application.Main %*

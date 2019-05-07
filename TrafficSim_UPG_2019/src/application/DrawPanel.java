@@ -15,6 +15,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
@@ -34,9 +35,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.sun.org.apache.xml.internal.security.Init;
 
 import TrafficSim.Car;
 import TrafficSim.CrossRoad;
@@ -49,7 +50,7 @@ import TrafficSim.Lane;
 
 public class DrawPanel extends JPanel  implements Printable{
 	private static final long serialVersionUID = 1L;
-	private final int MARGIN = 10;
+	private final int MARGIN = 0;
 	// Max a Min of crossroad in meters
 	private double Xmax_X_in_m = 0;
 	private double Xmax_Y_in_m = 0;
@@ -65,7 +66,7 @@ public class DrawPanel extends JPanel  implements Printable{
 
 	// Offset between lanes
 	private double OFFSET;
-	AffineTransform defaultTrsnsform;
+	private AffineTransform defaultTrsnsform;
 	private double scale;
 	// List of lanes to connect roads
 	private List<Road> connectionList;
@@ -73,28 +74,31 @@ public class DrawPanel extends JPanel  implements Printable{
 	private List<MyLane> laneList;
 	// Array to compute max and min points
 	private List<Point2D> points_array;
+	// Array of lanes to MouseClieck action
 	private HashMap<Shape, Lane> roads;
-	private HashMap<Car, Shape> cars;
-	private int simulation_time;
+	// Statistic data
+	private HashMap<Lane, List<DataSet>> dataSet = new HashMap<Lane, List<DataSet>>();
 	private float laneSize;
-	private boolean roadColor = true;
-	private boolean speedVisible = false;
-	private boolean allowEdit = false;
 	
+	// Change lanes color type
+	private boolean roadColor = true;
+	// Show car speed labels 
+	private boolean speedVisible = false;
+	
+	// Zoomer parameters
 	private double zoomFactor = 1;
     private double prevZoomFactor = 1;
     private boolean zoomer;
     private double xOffset = 0;
     private double yOffset = 0;
-    private DrawingTool dr = new DrawingTool();
-    
-    private HashMap<Lane, List<DataSet>> dataSet = new HashMap<Lane, List<DataSet>>();
-    
-    AffineTransform saveTransform;
-    AffineTransform at;   // the current pan and zoom transform
-    double translateX;
-	double translateY;
+
+    // Panner parameters
+    private AffineTransform saveTransform;
+    private AffineTransform at;   // the current pan and zoom transform
+    private double translateX;
+    private double translateY;
 	
+    // Cars images
 	private BufferedImage car1;
 	private BufferedImage car2;
 	private BufferedImage car3;
@@ -105,25 +109,14 @@ public class DrawPanel extends JPanel  implements Printable{
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
-		roads = new HashMap<Shape, Lane>();
-		cars = new HashMap<Car, Shape>();
-		
 		Graphics2D g2 = (Graphics2D)g; 
 		drawComponent(g2);
-		
-		CrossRoad[] cross = sim.getCrossroads();	
-		for (CrossRoad crossRoad : cross) {
-			TrafficLight[] lights = crossRoad.getTrafficLights(Direction.Entry);
-			
-			for(int i=1; i<lights.length; i++) {
-				if(lights[i]==null) continue;
-			}
-		}
-		
-		
-//		dr.drawTrafficLight(new Point2D.Double(100,100), scale, g2);
 	}
 	
+	/** 
+	 * Set current position
+	 * @param g2 Graphics context
+	 */
 	private void setDragger(Graphics2D g2) {
 		saveTransform = g2.getTransform();
 		at = new AffineTransform(saveTransform);
@@ -131,6 +124,10 @@ public class DrawPanel extends JPanel  implements Printable{
 		g2.setTransform(at);
 	}
 
+	/**
+	 * Set current zoom position
+	 * @param g2 Graphics context
+	 */
 	private void setZoomer(Graphics2D g2) {
 		if (zoomer) {
             
@@ -155,6 +152,10 @@ public class DrawPanel extends JPanel  implements Printable{
         }
 	}
 
+	/**
+	 * 1. Compute model dimensions and set maximum and minimum points of cross road.
+	 * 2. Fill laneList to future roads drawing
+	 */
 	public void computeModelDimensions() {
 		points_array = new ArrayList<>();
 		connectionList = new ArrayList<Road>();
@@ -184,17 +185,26 @@ public class DrawPanel extends JPanel  implements Printable{
 			      .stream()
 			      .min(Comparator.comparing(Point2D::getY))
 			      .get().getY(); 
-		
+	}
+
+	/**
+	 * Set cars images 
+	 */
+	public void setCarsImages() {
 		try {
 			car1 = ImageIO.read(new File("img/1.jpg"));
 			car2 = ImageIO.read(new File("img/2.jpg"));
 			car3 = ImageIO.read(new File("img/3.jpg"));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Set window dimensions
+	 * @param width		width of window
+	 * @param height	height of window
+	 */
 	private void computeModel2WindowTransformation(int width, int height) {
 		min_X_px = MARGIN;
 		max_X_px = width - MARGIN;
@@ -203,6 +213,12 @@ public class DrawPanel extends JPanel  implements Printable{
 		max_Y_px = height - MARGIN;
 	}
 	
+	/**
+	 * Compute new position of points on window
+	 * World -> Window
+	 * @param p Point in "World"
+	 * @return	Point in "Window"
+	 */
 	private Point2D model2window(Point2D p) {
 		double x = 0;
 		double y = 0;
@@ -217,6 +233,11 @@ public class DrawPanel extends JPanel  implements Printable{
 		return new Point2D.Double(x, y);
 	}
 
+	/**
+	 * Draw Traffic State
+	 * @param sim	Simulator instance
+	 * @param g		Graphic context
+	 */
 	private void drawTrafficState(Simulator sim, Graphics2D g) {
 		drawCrossRoad(g);
 		
@@ -227,6 +248,10 @@ public class DrawPanel extends JPanel  implements Printable{
 		}
 	}
   
+	/**
+	 * Draw all roads and connect it
+	 * @param g2d	Graphic context
+	 */
 	private void drawCrossRoad(Graphics2D g2d) {
 		drawRoadSegment(g2d);
 		
@@ -240,6 +265,11 @@ public class DrawPanel extends JPanel  implements Printable{
 		
 	}
 	
+	/**
+	 * Connect lines in crossroad
+	 * @param lane	Lane
+	 * @param g		Graphic context
+	 */
 	private void connectLanes(Lane lane, Graphics2D g) {
 		RoadSegment s = lane.getStartRoad();
 		RoadSegment e = lane.getEndRoad();
@@ -281,10 +311,15 @@ public class DrawPanel extends JPanel  implements Printable{
 		drawLane(start, end,(int) s.getLaneWidth(), g, lane);
 	}
 	
+	/**
+	 * Draw car with specific car type
+	 * @param car		Car
+	 * @param length	Length
+	 * @param g			Graphic context
+	 */
 	private void drawCar(Car car, int lenght, Graphics2D g) {
 		int w = (int) car.getLength();
 		int width = (int) car.getLength() * (int) scale;
-		
 		Point2D position = model2window(car.getPosition());
 		
 		defaultTrsnsform = g.getTransform();
@@ -292,7 +327,9 @@ public class DrawPanel extends JPanel  implements Printable{
 		drawSpeedString(speedVisible, car.getCurrentSpeed(), g);
 
 		g.rotate(-(car.getOrientation() + Math.PI / 2));
-		
+		g.setStroke(new BasicStroke(4));
+		g.setColor(Color.black);
+
 		switch (w) {
 		case 4: // 8
 			g.drawImage(car2, - lenght / 2, - width / 2, lenght/2, width/2, 0, 0, (int)(car2.getWidth()), (int)(car2.getHeight()), null);
@@ -310,10 +347,16 @@ public class DrawPanel extends JPanel  implements Printable{
 			g.setColor(Color.BLACK);
 			break;
 		}		
+		
 		g.setTransform(defaultTrsnsform);
-		cars.put(car, new Rectangle2D.Double(position.getX() - lenght / 2, position.getY() - width / 2, position.getX() + lenght/2, position.getY() + width/2));
 	}
 	
+	/**
+	 * Draw speed labels near a car
+	 * @param b			Is needed
+	 * @param speed		Speed value
+	 * @param g			Graphic context
+	 */
 	private void drawSpeedString(boolean b, double speed, Graphics2D g) {
 		if (b) {
 			FontMetrics metrics = g.getFontMetrics(g.getFont());
@@ -326,7 +369,37 @@ public class DrawPanel extends JPanel  implements Printable{
 		}
 	}
 
-	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g, Lane l) {
+	/**
+	 * Draw lane
+	 * @param start	Start position
+	 * @param end	End position
+	 * @param size	Lane size
+	 * @param g		Graphic context
+	 * @param l		Lane object
+	 */
+	private void drawLane(Point2D start, Point2D end, int size, Graphics2D g, Lane l) {		
+		Line2D lane = new Line2D.Double(model2window(start), model2window(end));
+		laneColor(l, g);
+		laneSize = (float)size * (float) scale;
+		g.setStroke(new BasicStroke((float)size * (float) scale, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
+				
+		Point2D s = model2window(start);
+		Point2D e = model2window(end);
+		
+		GeneralPath path = new GeneralPath();
+		path.moveTo(s.getX(), s.getY());
+		path.lineTo(e.getX(), e.getY());
+		path.closePath();
+		roads.put(path, l);
+		g.draw(lane);
+	}
+	
+	/**
+	 * Color lane
+	 * @param l		Lane object
+	 * @param g		Graphic context
+	 */
+	private void laneColor(Lane l, Graphics2D g) {
 		double value;
 		if (roadColor) {
 			value = l.getSpeedAverage();
@@ -344,30 +417,23 @@ public class DrawPanel extends JPanel  implements Printable{
 			else g.setColor(new Color(79,101,128));		
 		}
 		
-		Line2D lane = new Line2D.Double(model2window(start), model2window(end));
-		
-		Point2D s = model2window(start);
-		Point2D e = model2window(end);
-		
-		GeneralPath path = new GeneralPath();
-		path.moveTo(s.getX(), s.getY());
-		path.lineTo(e.getX(), e.getY());
-		path.closePath();
-		
-		roads.put(path, l);
-		laneSize = (float)size * (float) scale;
-		g.setStroke(new BasicStroke((float)size * (float) scale, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER));	
-		g.draw(lane);
 	}
-	
+
+	/**
+	 * Draw all roads
+	 * @param g		Graphic context
+	 */
 	private void drawRoadSegment(Graphics2D g) {
-		int i = 0;
+		roads = new HashMap<Shape, Lane>();
 		for (MyLane myLane : laneList) {
 			drawLane(myLane.getStart(), myLane.getEnd(), (int) myLane.getSize(), g, myLane.getLine());
-			i++;
 		}
 	}
 	
+	/**
+	 * Compute road dimensions (max and min points)
+	 * And fill laneList to draw roads and connectionList to draw connect lines
+	 */
 	private void getRoadsDimensions() {
 		RoadSegment[] roads = sim.getRoadSegments();
 		for (RoadSegment road : roads) {
@@ -470,6 +536,10 @@ public class DrawPanel extends JPanel  implements Printable{
 		
 	}
 	
+	/**
+	 * Draw all crossroad
+	 * @param g2d
+	 */
 	public void drawComponent(Graphics2D g2d) {	
 		// Set background color
 		g2d.setColor(new Color(230, 255, 204));
@@ -483,6 +553,44 @@ public class DrawPanel extends JPanel  implements Printable{
 		// Draw crossroads
 		g2d.translate(MARGIN, MARGIN);
 		drawTrafficState(sim, g2d);	
+	}
+	
+	/**
+	 * Print method
+	 */
+	@Override
+	public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+		if (pageIndex > 0) {
+			return NO_SUCH_PAGE;
+		}
+		
+		Graphics2D g2 = (Graphics2D)graphics;
+		
+		g2.rotate(Math.toRadians(90));
+		g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+		// Samotne vykresleni obsahu
+		drawComponent(g2);
+		return PAGE_EXISTS;
+	}
+
+	/**
+	 * Every timer tick will add to structure new statistic values 
+	 * @param i
+	 */
+	public void updateDataSet(double i) {
+		for (MyLane myLane : laneList) {
+			Lane lane = myLane.getLine();
+			if (!dataSet.containsKey(lane)) {
+				List<DataSet> d = new ArrayList<DataSet>();
+				d.add(new DataSet(i, lane.getNumberOfCarsCurrent(), lane.getNumberOfCarsTotal(), lane.getSpeedAverage()));
+				dataSet.put(lane, d);
+			} else {
+				List<DataSet> d = dataSet.get(lane);
+				d.add(new DataSet(i, lane.getNumberOfCarsCurrent(), lane.getNumberOfCarsTotal(), lane.getSpeedAverage()));
+				dataSet.replace(lane, d);
+			}
+		}
 	}
 	
 	public Simulator getSim() {
@@ -503,10 +611,6 @@ public class DrawPanel extends JPanel  implements Printable{
 	
 	public double getZoomFactor() {
 		return this.zoomFactor;
-	}
-
-	public void setSimulation_time(int simulation_time) {
-		this.simulation_time = simulation_time;
 	}
 
 	public double getTranslateX() {
@@ -536,49 +640,9 @@ public class DrawPanel extends JPanel  implements Printable{
 	public float getLaneSize() {
 		return laneSize;
 	}
-	
-	public void setAllowEdit(boolean allowEdit) {
-		this.allowEdit = allowEdit;
-	}
-
-	@Override
-	public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
-		if (pageIndex > 0) {
-			return NO_SUCH_PAGE;
-		}
-		
-		Graphics2D g2 = (Graphics2D)graphics;
-		
-		g2.rotate(Math.toRadians(90));
-		g2.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
-
-		// Samotne vykresleni obsahu
-		drawComponent(g2);
-		return PAGE_EXISTS;
-	}
 
 	public void setSpeedVisible(boolean b) {
 		speedVisible = b;
-	}
-
-	public HashMap<Car, Shape> getCars() {
-		return cars;
-	}
-
-	public void updateDataSet(double i) {
-		for (MyLane myLane : laneList) {
-			Lane lane = myLane.getLine();
-			
-			if (!dataSet.containsKey(lane)) {
-				List<DataSet> d = new ArrayList<DataSet>();
-				d.add(new DataSet(i, lane.getNumberOfCarsCurrent(), lane.getNumberOfCarsTotal(), lane.getSpeedAverage()));
-				dataSet.put(lane, d);
-			} else {
-				List<DataSet> d = dataSet.get(lane);
-				d.add(new DataSet(i, lane.getNumberOfCarsCurrent(), lane.getNumberOfCarsTotal(), lane.getSpeedAverage()));
-				dataSet.replace(lane, d);
-			}
-		}
 	}
 
 	public HashMap<Lane, List<DataSet>> getDataSet() {

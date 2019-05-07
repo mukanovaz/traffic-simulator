@@ -68,9 +68,11 @@ public class GraphController {
 	 * @param lane 
 	 */
 	public GraphController() {
-		if (lane != null) 
-			initialize(lane, dataSet);
-		else initialize(dataSet);
+		if (dataSet != null) {
+			if (lane != null) 
+				initialize(lane, dataSet);
+			else initialize(dataSet);			
+		}
 	}
 
 
